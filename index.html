@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ristorante Savino - Gestione Ordini</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; color: #333; }
+        header { background-color: #2c3e50; color: white; text-align: center; padding: 15px; font-weight: bold; font-size: 1.1rem; }
+        nav { display: flex; background: #34495e; }
+        nav button { flex: 1; padding: 12px 5px; border: none; background: transparent; color: white; font-size: 0.85rem; font-weight: bold; cursor: pointer; }
+        nav button.active { background: #1abc9c; }
+        
+        .tab-content { display: none; padding: 15px; }
+        .tab-content.active { display: block; }
+        
+        .card { background: white; padding: 12px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .grid-buttons { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 10px; }
+        
+        .btn-grid { background: #3498db; color: white; border: none; padding: 12px 8px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; cursor: pointer; text-align: center; word-break: break-word; }
+        .btn-cat { background: #8e44ad; }
+        .btn-supp { background: #d35400; }
+        
+        .btn-action { background: #27ae60; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-size: 0.95rem; width: 100%; margin-top: 8px; font-weight: bold; }
+        .btn-del { background: #e74c3c; width: auto; padding: 5px 10px; font-size: 0.8rem; margin-left: 10px; }
+        .btn-wa { background: #25D366; }
+        
+        input, select { width: 100%; padding: 10px; margin: 5px 0 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
+        
+        .qty-controls { display: flex; align-items: center; gap: 8px; margin-top: 10px; background: #eef2f5; padding: 10px; border-radius: 6px; }
+        .qty-btn { background: #2c3e50; color: white; border: none; width: 35px; height: 35px; font-size: 1.2rem; border-radius: 5px; font-weight: bold; }
+        
+        .supplier-badge { background: #eef2f5; padding: 6px; border-radius: 4px; margin-top: 4px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
+        .total-box { background: #27ae60; color: white; padding: 8px 12px; border-radius: 5px; font-weight: bold; text-align: right; margin-top: 10px; font-size: 1.05rem; }
+    </style>
+</head>
+<body>
+
+<header>Ristorante Savino - Gestione Ordini</header>
+
+<nav>
+    <button class="nav-btn active" onclick="openTab('prodotti', this)">1. Ordina</button>
+    <button class="nav-btn" onclick="openTab('fornitori', this)">2. Per Fornitore</button>
+    <button class="nav-btn" onclick="openTab('gestione', this)">3. Gestione</button>
+    <button class="nav-btn" onclick="openTab('storico', this)">4. Storico</button>
+</nav>
+
+<!-- PAGINA 1: Ordina via Pulsanti -->
+<div id="prodotti" class="tab-content active">
+    <h3>Seleziona Categoria</h3>
+    <div id="cat-buttons" class="grid-buttons"></div>
+
+    <hr style="margin: 15px 0; border: 0; border-top: 1px solid #ccc;">
+
+    <div id="prod-section" style="display:none;">
+        <h3 id="selected-cat-title">Prodotti</h3>
+        <div id="prod-buttons" class="grid-buttons"></div>
+    </div>
+
+    <!-- Modale/Pannello Quantità e Selezione Fornitore -->
+    <div id="qty-panel" class="card" style="display:none; margin-top:15px; border:2px solid #3498db;">
+        <h4 id="qty-prod-title" style="margin:0 0 5px 0;">Prodotto</h4>
+        <label style="font-size:0.85rem; font-weight:bold;">Scegli Fornitore:</label>
+        <select id="select-prod-supplier" onchange="updateSupplierOfferDetails()"></select>
+        
+        <div id="qty-prod-details" style="font-size:0.9rem; color:#666; margin-bottom:10px;"></div>
+        
+        <div class="qty-controls">
+            <button class="qty-btn" onclick="changeQty(-1)">-</button>
+            <input type="number" id="current-qty" value="1" min="1" style="text-align:center; font-size:1.2rem; margin:0;">
+            <span id="unit-label" style="font-weight:bold;"></span>
+            <button class="qty-btn" onclick="changeQty(1)">+</button>
+            <button class="btn-action" style="margin:0;" onclick="confirmAddProduct()">Aggiungi</button>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:15px;">
+        <h4>Carrello Attuale</h4>
+        <div id="cart-list">Nessun prodotto selezionato.</div>
+    </div>
+</div>
+
+<!-- PAGINA 2: Ordine diviso per Fornitore con Totale Prezzo -->
+<div id="fornitori" class="tab-content">
+    <h3>Riepilogo Ordine per Fornitore</h3>
+    <div id="supplier-orders-container"></div>
+</div>
+
+<!-- PAGINA 3: Gestione Fornitori e Catalogo -->
+<div id="gestione" class="tab-content">
+    <div class="card">
+        <h4>1. Gestione Fornitori</h4>
+        <input type="text" id="new-supplier-name" placeholder="Nome Nuovo Fornitore (es. Nigro)">
+        <button class="btn-action" onclick="addSupplier()">Salva Fornitore</button>
+        <div id="suppliers-list" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card">
+        <h4>2. Aggiungi / Associa Prodotto a Fornitore</h4>
+        <label style="font-weight:bold; font-size:0.85rem;">Prodotto Esistente o Nuovo:</label>
+        <input type="text" id="new-prod-name" list="existing-products-list" placeholder="Es. Pomodori (Scegli o Scrivi nuovo)">
+        <datalist id="existing-products-list"></datalist>
+
+        <input type="text" id="new-prod-cat" placeholder="Categoria (es. Verdure)">
+
+        <label style="font-weight:bold; font-size:0.85rem;">Fornitore da Associare:</label>
+        <select id="new-prod-supplier-select"></select>
+
+        <label style="font-weight:bold; font-size:0.85rem;">Unità di misura per questo fornitore:</label>
+        <select id="new-prod-unit">
+            <option value="Kg">Kg</option>
+            <option value="Pezzi">Pezzi</option>
+            <option value="Casse">Casse</option>
+            <option value="Buste">Buste</option>
+            <option value="Litri">Litri</option>
+            <option value="Cartoni">Cartoni</option>
+        </select>
+
+        <input type="number" step="0.01" id="new-prod-price" placeholder="Prezzo da questo fornitore (€)">
+
+        <button class="btn-action" onclick="addOrUpdateProduct()">Salva / Associa Prodotto</button>
+    </div>
+
+    <div class="card">
+        <h4>3. Catalogo Prodotti per Fornitore</h4>
+        <label style="font-weight:bold; font-size:0.85rem;">Filtra per Fornitore:</label>
+        <select id="filter-supplier-view" onchange="renderSupplierCatalog()"></select>
+        <div id="supplier-catalog-list" style="margin-top:10px;"></div>
+    </div>
+</div>
+
+<!-- PAGINA 4: Storico Ordini -->
+<div id="storico" class="tab-content">
+    <h3>Storico Ordini Inviati</h3>
+    <div id="history-container"></div>
+    <button class="btn-action btn-del" style="width:100%; margin-top:15px;" onclick="clearHistory()">Svuota Storico</button>
+</div>
+
+<script>
+    let suppliers = JSON.parse(localStorage.getItem('savino_suppliers')) || ['Nigro'];
+    let products = JSON.parse(localStorage.getItem('savino_products_v2')) || [];
+    let cart = []; 
+    let selectedProductForQty = null;
+
+    function saveState() {
+        localStorage.setItem('savino_suppliers', JSON.stringify(suppliers));
+        localStorage.setItem('savino_products_v2', JSON.stringify(products));
+    }
+
+    function openTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+
+        if (tabId === 'prodotti') renderCategories();
+        if (tabId === 'fornitori') renderSupplierOrders();
+        if (tabId === 'gestione') renderGestione();
+        if (tabId === 'storico') renderHistory();
+    }
+
+    // --- SCHEDA 1: ORDINA ---
+    function renderCategories() {
+        const catContainer = document.getElementById('cat-buttons');
+        const categories = [...new Set(products.map(p => p.category))];
+        
+        if (categories.length === 0) {
+            catContainer.innerHTML = "<p>Nessuna categoria. Vai in <b>Gestione</b> per aggiungere prodotti.</p>";
+            return;
+        }
+
+        catContainer.innerHTML = categories.map(cat => 
+            `<button class="btn-grid btn-cat" onclick="selectCategory('${cat}')">${cat}</button>`
+        ).join('');
+    }
+
+    function selectCategory(cat) {
+        document.getElementById('prod-section').style.display = 'block';
+        document.getElementById('selected-cat-title').innerText = "Prodotti: " + cat;
+        
+        const prodContainer = document.getElementById('prod-buttons');
+        const filtered = products.filter(p => p.category === cat);
+
+        prodContainer.innerHTML = filtered.map(p => 
+            `<button class="btn-grid" onclick="openQtyPanel('${p.name}')">${p.name}</button>`
+        ).join('');
+    }
+
+    function openQtyPanel(prodName) {
+        selectedProductForQty = products.find(p => p.name === prodName);
+        document.getElementById('qty-panel').style.display = 'block';
+        document.getElementById('qty-prod-title').innerText = selectedProductForQty.name;
+        
+        const suppSelect = document.getElementById('select-prod-supplier');
+        suppSelect.innerHTML = selectedProductForQty.offers.map(o => 
+            `<option value="${o.supplier}">${o.supplier}</option>`
+        ).join('');
+
+        updateSupplierOfferDetails();
+        document.getElementById('current-qty').value = 1;
+    }
+
+    function updateSupplierOfferDetails() {
+        if (!selectedProductForQty) return;
+        const selectedSupp = document.getElementById('select-prod-supplier').value;
+        const offer = selectedProductForQty.offers.find(o => o.supplier === selectedSupp);
+        
+        if (offer) {
+            const priceText = offer.price ? `€ ${parseFloat(offer.price).toFixed(2)}` : 'Prezzo N/D';
+            document.getElementById('qty-prod-details').innerText = `Prezzo: ${priceText} / ${offer.unit}`;
+            document.getElementById('unit-label').innerText = offer.unit;
+        }
+    }
+
+    function changeQty(delta) {
+        let input = document.getElementById('current-qty');
+        let val = parseInt(input.value) + delta;
+        if (val < 1) val = 1;
+        input.value = val;
+    }
+
+    function confirmAddProduct() {
+        if (!selectedProductForQty) return;
+        const qty = parseInt(document.getElementById('current-qty').value);
+        const selectedSupp = document.getElementById('select-prod-supplier').value;
+        const offer = selectedProductForQty.offers.find(o => o.supplier === selectedSupp);
+
+        const existing = cart.find(item => item.product === selectedProductForQty.name && item.supplier === selectedSupp);
+        if (existing) {
+            existing.qty += qty;
+        } else {
+            cart.push({
+                product: selectedProductForQty.name,
+                category: selectedProductForQty.category,
+                supplier: selectedSupp,
+                unit: offer ? offer.unit : 'Pezzi',
+                price: offer && offer.price ? parseFloat(offer.price) : 0,
+                qty: qty
+            });
+        }
+
+        document.getElementById('qty-panel').style.display = 'none';
+        selectedProductForQty = null;
+        renderCart();
+    }
+
+    function renderCart() {
+        const cartContainer = document.getElementById('cart-list');
+        if (cart.length === 0) {
+            cartContainer.innerHTML = "Nessun prodotto selezionato.";
+            return;
+        }
+
+        cartContainer.innerHTML = cart.map((item, idx) => {
+            const subtotal = item.price ? `(€ ${(item.price * item.qty).toFixed(2)})` : '';
+            return `
+                <div class="list-item">
+                    <span><b>${item.product}</b> x ${item.qty} ${item.unit} ${subtotal} [<i>${item.supplier}</i>]</span>
+                    <button class="btn-action btn-del" onclick="removeFromCart(${idx})">Elimina</button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function removeFromCart(idx) {
+        cart.splice(idx, 1);
+        renderCart();
+    }
+
+    // --- SCHEDA 2: PER FORNITORE (CON TOTALE PREZZO) ---
+    function renderSupplierOrders() {
+        const container = document.getElementById('supplier-orders-container');
+        if (cart.length === 0) {
+            container.innerHTML = "<p>Nessun ordine nel carrello. Seleziona prima i prodotti nella scheda Ordina.</p>";
+            return;
+        }
+
+        const grouped = {};
+        cart.forEach(item => {
+            if (!grouped[item.supplier]) grouped[item.supplier] = [];
+            grouped[item.supplier].push(item);
+        });
+
+        container.innerHTML = Object.keys(grouped).map(supp => {
+            const items = grouped[supp];
+            let totalPrice = 0;
+
+            const textList = items.map(i => {
+                const lineTotal = i.price ? i.price * i.qty : 0;
+                totalPrice += lineTotal;
+                const priceDetail = i.price ? ` (€ ${lineTotal.toFixed(2)})` : '';
+                return `- ${i.product}: ${i.qty} ${i.unit}${priceDetail}`;
+            }).join('\n');
+
+            const totalText = totalPrice > 0 ? `\nTotale Stimato: € ${totalPrice.toFixed(2)}` : '';
+            const fullWaText = `${textList}${totalText}`;
+
+            return `
+                <div class="card">
+                    <h4>Fornitore: ${supp}</h4>
+                    <pre style="font-family:inherit; margin:10px 0;">${textList}</pre>
+                    ${totalPrice > 0 ? `<div class="total-box">Totale Ordine: € ${totalPrice.toFixed(2)}</div>` : ''}
+                    <button class="btn-action btn-wa" onclick="sendWhatsApp('${supp}', \`${fullWaText}\`)">Invia su WhatsApp</button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function sendWhatsApp(fornitore, testo) {
+        const messaggio = encodeURIComponent(`Ciao ${fornitore}, ecco l'ordine per il Ristorante Savino:\n\n${testo}`);
+        saveToHistory(fornitore, testo);
+        window.open(`https://wa.me/?text=${messaggio}`, '_blank');
+    }
+
+    // --- SCHEDA 3: GESTIONE ---
+    function addSupplier() {
+        const nameInput = document.getElementById('new-supplier-name');
+        const name = nameInput.value.trim();
+        if (name && !suppliers.includes(name)) {
+            suppliers.push(name);
+            saveState();
+            nameInput.value = '';
+            renderGestione();
+        }
+    }
+
+    function deleteSupplier(name) {
+        suppliers = suppliers.filter(s => s !== name);
+        products.forEach(p => {
+            p.offers = p.offers.filter(o => o.supplier !== name);
+        });
+        products = products.filter(p => p.offers.length > 0);
+        saveState();
+        renderGestione();
+    }
+
+    function addOrUpdateProduct() {
+        const name = document.getElementById('new-prod-name').value.trim();
+        const cat = document.getElementById('new-prod-cat').value.trim();
+        const supp = document.getElementById('new-prod-supplier-select').value;
+        const unit = document.getElementById('new-prod-unit').value;
+        const price = document.getElementById('new-prod-price').value;
+
+        if (!name || !supp) return;
+
+        let prod = products.find(p => p.name.toLowerCase() === name.toLowerCase());
+
+        if (prod) {
+            let offer = prod.offers.find(o => o.supplier === supp);
+            if (offer) {
+                offer.unit = unit;
+                offer.price = price;
+            } else {
+                prod.offers.push({ supplier: supp, unit, price });
+            }
+            if (cat) prod.category = cat;
+        } else {
+            products.push({
+                name: name,
+                category: cat || 'Generale',
+                offers: [{ supplier: supp, unit, price }]
+            });
+        }
+
+        saveState();
+        document.getElementById('new-prod-name').value = '';
+        document.getElementById('new-prod-cat').value = '';
+        document.getElementById('new-prod-price').value = '';
+        renderGestione();
+    }
+
+    function removeSupplierFromProduct(prodName, suppName) {
+        let prod = products.find(p => p.name === prodName);
+        if (prod) {
+            prod.offers = prod.offers.filter(o => o.supplier !== suppName);
+            if (prod.offers.length === 0) {
+                products = products.filter(p => p.name !== prodName);
+            }
+            saveState();
+            renderGestione();
+        }
+    }
+
+    function renderGestione() {
+        const suppSelect = document.getElementById('new-prod-supplier-select');
+        const filterSelect = document.getElementById('filter-supplier-view');
+        
+        const suppOptions = suppliers.map(s => `<option value="${s}">${s}</option>`).join('');
+        suppSelect.innerHTML = suppOptions;
+        filterSelect.innerHTML = `<option value="ALL">-- Tutti i Fornitori --</option>` + suppOptions;
+
+        const dataList = document.getElementById('existing-products-list');
+        dataList.innerHTML = products.map(p => `<option value="${p.name}">`).join('');
+
+        const suppList = document.getElementById('suppliers-list');
+        suppList.innerHTML = suppliers.length ? suppliers.map(s => `
+            <div class="list-item">
+                <span><b>${s}</b></span>
+                <button class="btn-action btn-del" onclick="deleteSupplier('${s}')">Elimina</button>
+            </div>
+        `).join('') : "Nessun fornitore salvato.";
+
+        renderSupplierCatalog();
+    }
+
+    function renderSupplierCatalog() {
+        const filter = document.getElementById('filter-supplier-view').value;
+        const catalogContainer = document.getElementById('supplier-catalog-list');
+        
+        let filteredProducts = products;
+        if (filter !== 'ALL') {
+            filteredProducts = products.filter(p => p.offers.some(o => o.supplier === filter));
+        }
+
+        if (filteredProducts.length === 0) {
+            catalogContainer.innerHTML = "Nessun prodotto trovato.";
+            return;
+        }
+
+        catalogContainer.innerHTML = filteredProducts.map(p => {
+            const offersList = p.offers
+                .filter(o => filter === 'ALL' || o.supplier === filter)
+                .map(o => `
+                    <div class="supplier-badge">
+                        <span>Fornitore: <b>${o.supplier}</b> | ${o.unit} ${o.price ? '€' + parseFloat(o.price).toFixed(2) : ''}</span>
+                        <button class="btn-action btn-del" onclick="removeSupplierFromProduct('${p.name}', '${o.supplier}')">Rimuovi</button>
+                    </div>
+                `).join('');
+
+            return `
+                <div class="list-item" style="flex-direction:column; align-items:flex-start;">
+                    <span><b>${p.name}</b> (${p.category})</span>
+                    <div style="width:100%;">${offersList}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // --- SCHEDA 4: STORICO ---
+    function saveToHistory(fornitore, testo) {
+        let history = JSON.parse(localStorage.getItem('savino_history') || '[]');
+        history.unshift({ data: new Date().toLocaleString(), fornitore, testo });
+        localStorage.setItem('savino_history', JSON.stringify(history));
+    }
+
+    function renderHistory() {
+        const container = document.getElementById('history-container');
+        let history = JSON.parse(localStorage.getItem('savino_history') || '[]');
+        if (history.length === 0) {
+            container.innerHTML = "<p>Nessun ordine presente nello storico.</p>";
+            return;
+        }
+        container.innerHTML = history.map(item => `
+            <div class="card">
+                <small style="color:#7f8c8d;">${item.data}</small><br>
+                <strong>Fornitore: ${item.fornitore}</strong>
+                <pre style="font-family:inherit; margin:5px 0 0 0;">${item.testo}</pre>
+            </div>
+        `).join('');
+    }
+
+    function clearHistory() {
+        localStorage.removeItem('savino_history');
+        renderHistory();
+    }
+
+    renderCategories();
+</script>
+
+</body>
+</html>
