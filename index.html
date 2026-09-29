@@ -142,7 +142,7 @@
                 </select>
                 <select id="new-prod-fornitore"></select>
                 <input type="text" id="new-prod-unita" placeholder="Unità (es. kg, cassa)">
-                <input type="number" step="0.01" id="new-prod-prezzo" placeholder="Prezzo (€)">
+                <input type="text" id="new-prod-prezzo" placeholder="Prezzo (€) es. 12.50">
                 <button class="btn btn-primary" onclick="addProdotto()">+ Aggiungi Prodotto</button>
             </div>
 
@@ -174,6 +174,18 @@
         let storico = JSON.parse(localStorage.getItem('savino_storico')) || [];
         let currentCat = 'Pesce';
 
+        function parsePrice(val) {
+            if (val === undefined || val === null) return 0;
+            let str = String(val).replace(',', '.');
+            let num = parseFloat(str);
+            return isNaN(num) ? 0 : num;
+        }
+
+        function getFornitoreNome(fId) {
+            let f = fornitori.find(x => x.id === fId || x.nome === fId);
+            return f ? f.nome : fId;
+        }
+
         function fetchProductsFromCloud() {
             document.getElementById('sync-info').innerText = '⏳ Sincronizzazione...';
             
@@ -187,7 +199,7 @@
                         cat: String(p.cat),
                         fornitoreId: String(p.fornitoreId),
                         unita: String(p.unita),
-                        prezzo: parseFloat(p.prezzo) || 0
+                        prezzo: parsePrice(p.prezzo)
                     }));
                     document.getElementById('sync-info').innerText = '☁️ Sincronizzato';
                     renderOrdini();
@@ -323,14 +335,15 @@
             }
 
             for (let fId in grouped) {
-                let f = fornitori.find(x => x.id === fId) || { nome: 'Sconosciuto', tel: '' };
+                let fName = getFornitoreNome(fId);
+                let fObj = fornitori.find(x => x.id === fId || x.nome === fId) || { tel: '' };
                 let items = grouped[fId];
                 let subtot = 0;
                 let textMsg = `*ORDINE RISTORANTE SAVINO*\n\n`;
 
                 let card = document.createElement('div');
                 card.className = 'card';
-                let html = `<div class="card-title"><span>${f.nome}</span></div><ul style="margin-bottom:10px; font-size:13px; list-style:none;">`;
+                let html = `<div class="card-title"><span>${fName}</span></div><ul style="margin-bottom:10px; font-size:13px; list-style:none;">`;
 
                 items.forEach(i => {
                     let cost = i.qty * i.prod.prezzo;
@@ -342,7 +355,7 @@
                 textMsg += `\n*Totale Stimato: €${subtot.toFixed(2)}*`;
                 html += `</ul><div style="display:flex; justify-content:space-between; align-items:center;">
                             <strong>Totale: €${subtot.toFixed(2)}</strong>
-                            <button class="btn btn-success" onclick="inviaWhatsApp('${f.tel}', \`${encodeURIComponent(textMsg)}\`, '${fId}')">📱 Invia via WhatsApp</button>
+                            <button class="btn btn-success" onclick="inviaWhatsApp('${fObj.tel}', \`${encodeURIComponent(textMsg)}\`, '${fId}')">📱 Invia via WhatsApp</button>
                          </div>`;
                 card.innerHTML = html;
                 container.appendChild(card);
@@ -374,11 +387,11 @@
                     </td>
                     <td>
                         <select onchange="updateProdField(${idx}, 'fornitoreId', this.value)" style="margin:0; padding:2px;">
-                            ${fornitori.map(fItem => `<option value="${fItem.id}" ${fItem.id === p.fornitoreId ? 'selected' : ''}>${fItem.nome}</option>`).join('')}
+                            ${fornitori.map(fItem => `<option value="${fItem.id}" ${fItem.id === p.fornitoreId \vert{}\vert{} fItem.nome === p.fornitoreId ? 'selected' : ''}>${fItem.nome}</option>`).join('')}
                         </select>
                     </td>
                     <td><input type="text" value="${p.unita}" style="width:60px;" onchange="updateProdField(${idx}, 'unita', this.value)"></td>
-                    <td><input type="number" step="0.01" value="${p.prezzo}" style="width:70px;" onchange="updateProdField(${idx}, 'prezzo', parseFloat(this.value))"></td>
+                    <td><input type="text" value="${p.prezzo}" style="width:70px;" onchange="updateProdField(${idx}, 'prezzo', parsePrice(this.value))"></td>
                     <td><button class="btn btn-danger btn-sm" onclick="deleteProdotto(${idx})">🗑️</button></td>
                 `;
                 tbody.appendChild(tr);
@@ -400,11 +413,10 @@
 
         function exportToExcel() {
             let dataExport = prodotti.map(p => {
-                let f = fornitori.find(x => x.id === p.fornitoreId) || { nome: '' };
                 return {
                     'Prodotto': p.nome,
                     'Categoria': p.cat,
-                    'Fornitore': f.nome,
+                    'Fornitore': getFornitoreNome(p.fornitoreId),
                     'Unità di Misura': p.unita,
                     'Prezzo (€)': p.prezzo
                 };
@@ -459,7 +471,7 @@
             let cat = document.getElementById('new-prod-cat').value;
             let fornitoreId = document.getElementById('new-prod-fornitore').value;
             let unita = document.getElementById('new-prod-unita').value.trim() || 'kg';
-            let prezzo = parseFloat(document.getElementById('new-prod-prezzo').value) || 0;
+            let prezzo = parsePrice(document.getElementById('new-prod-prezzo').value);
 
             if (!nome) return alert('Inserisci il nome del prodotto');
             prodotti.push({ id: 'p_' + Date.now(), nome, cat, fornitoreId, unita, prezzo });
@@ -477,11 +489,11 @@
             }
             container.innerHTML = '';
             storico.slice().reverse().forEach(item => {
-                let f = fornitori.find(x => x.id === item.fornitoreId) || { nome: 'Fornitore' };
+                let fName = getFornitoreNome(item.fornitoreId);
                 let card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-                    <div style="font-size:12px; color:#64748b; margin-bottom:4px;">${item.data} - <strong>${f.nome}</strong></div>
+                    <div style="font-size:12px; color:#64748b; margin-bottom:4px;">${item.data} - <strong>${fName}</strong></div>
                     <pre style="font-size:12px; white-space:pre-wrap; background:#f8fafc; padding:8px; border-radius:4px;">${item.dettaglio}</pre>
                 `;
                 container.appendChild(card);
