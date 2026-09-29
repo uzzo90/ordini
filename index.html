@@ -177,8 +177,9 @@
         function fetchProductsFromCloud() {
             document.getElementById('sync-info').innerText = '⏳ Sincronizzazione...';
             
-            const cbName = 'handleData_' + Date.now();
-            window[cbName] = function(data) {
+            const callbackName = 'savinoCallback_' + Math.floor(Math.random() * 1000000);
+            
+            window[callbackName] = function(data) {
                 if (Array.isArray(data)) {
                     prodotti = data.map(p => ({
                         id: String(p.id),
@@ -192,14 +193,17 @@
                     renderOrdini();
                     updateHeaderTotal();
                 }
-                delete window[cbName];
-                if (script.parentNode) script.parentNode.removeChild(script);
+                delete window[callbackName];
+                let s = document.getElementById(callbackName);
+                if (s) s.remove();
             };
 
             const script = document.createElement('script');
-            script.src = GOOGLE_SCRIPT_URL + '?callback=' + cbName;
+            script.id = callbackName;
+            script.src = GOOGLE_SCRIPT_URL + '?callback=' + callbackName;
             script.onerror = function() {
                 document.getElementById('sync-info').innerText = '⚠️ Errore Connessione';
+                delete window[callbackName];
             };
             document.head.appendChild(script);
         }
