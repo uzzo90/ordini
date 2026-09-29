@@ -72,11 +72,11 @@
     </header>
 
     <nav>
-        <button class="nav-btn active" onclick="switchTab('tab-ordini')">🛒 Ordina</button>
-        <button class="nav-btn" onclick="switchTab('tab-fornitori')">📱 Invia</button>
-        <button class="nav-btn" onclick="switchTab('tab-foglio')">📊 Foglio</button>
-        <button class="nav-btn" onclick="switchTab('tab-gestione')">⚙️ Gestisci</button>
-        <button class="nav-btn" onclick="switchTab('tab-storico')">📜 Storico</button>
+        <button class="nav-btn active" onclick="switchTab('tab-ordini', event)">🛒 Ordina</button>
+        <button class="nav-btn" onclick="switchTab('tab-fornitori', event)">📱 Invia</button>
+        <button class="nav-btn" onclick="switchTab('tab-foglio', event)">📊 Foglio</button>
+        <button class="nav-btn" onclick="switchTab('tab-gestione', event)">⚙️ Gestisci</button>
+        <button class="nav-btn" onclick="switchTab('tab-storico', event)">📜 Storico</button>
     </nav>
 
     <div class="main-content">
@@ -86,8 +86,11 @@
                 <div class="grid-select" id="cat-grid"></div>
             </div>
             <div class="card">
-                <div class="card-title">Prodotti</div>
-                <div id="prod-list">Caricamento prodotti dal cloud...</div>
+                <div class="card-title">
+                    <span>Prodotti</span>
+                    <button class="btn btn-secondary btn-sm" onclick="fetchProductsFromCloud()">🔄 Ricarica</button>
+                </div>
+                <div id="prod-list">Inizializzazione...</div>
             </div>
         </div>
 
@@ -169,7 +172,7 @@
         ];
 
         let fornitori = JSON.parse(localStorage.getItem('savino_fornitori')) || defaultFornitori;
-        let prodotti = [];
+        let prodotti = JSON.parse(localStorage.getItem('savino_cache_prodotti')) || [];
         let carrello = JSON.parse(localStorage.getItem('savino_carrello')) || {};
         let storico = JSON.parse(localStorage.getItem('savino_storico')) || [];
         let currentCat = 'Pesce';
@@ -194,13 +197,14 @@
             window[callbackName] = function(data) {
                 if (Array.isArray(data)) {
                     prodotti = data.map(p => ({
-                        id: String(p.id),
-                        nome: String(p.nome),
-                        cat: String(p.cat),
-                        fornitoreId: String(p.fornitoreId),
-                        unita: String(p.unita),
-                        prezzo: parsePrice(p.prezzo)
+                        id: String(p.id || p.ID || 'p_' + Math.random()),
+                        nome: String(p.nome || p.Nome || p.PRODOTTO || ''),
+                        cat: String(p.cat || p.Categoria || p.CATEGORIA || 'Altro'),
+                        fornitoreId: String(p.fornitoreId || p.fornitore || p.FORNITORE || ''),
+                        unita: String(p.unita || p.Unita || p.UNITA || 'kg'),
+                        prezzo: parsePrice(p.prezzo || p.Prezzo || p.PREZZO)
                     }));
+                    localStorage.setItem('savino_cache_prodotti', JSON.stringify(prodotti));
                     document.getElementById('sync-info').innerText = '☁️ Sincronizzato';
                     renderOrdini();
                     updateHeaderTotal();
@@ -215,6 +219,7 @@
             script.src = GOOGLE_SCRIPT_URL + '?callback=' + callbackName;
             script.onerror = function() {
                 document.getElementById('sync-info').innerText = '⚠️ Errore Connessione';
+                renderOrdini();
                 delete window[callbackName];
             };
             document.head.appendChild(script);
@@ -222,6 +227,7 @@
 
         async function saveProductsToCloud() {
             document.getElementById('sync-info').innerText = '⏳ Salvataggio Cloud...';
+            localStorage.setItem('savino_cache_prodotti', JSON.stringify(prodotti));
             try {
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
@@ -243,12 +249,12 @@
             updateHeaderTotal();
         }
 
-        function switchTab(tabId) {
+        function switchTab(tabId, ev) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
             
             document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
 
             if (tabId === 'tab-ordini') renderOrdini();
             if (tabId === 'tab-fornitori') renderInvio();
@@ -269,22 +275,25 @@
         function renderOrdini() {
             let categorie = ['Pesce', 'Carne', 'Ortofrutta', 'Secco/Scatolame', 'Latticini', 'Bevande', 'Altro'];
             let catGrid = document.getElementById('cat-grid');
-            catGrid.innerHTML = '';
-
-            categorie.forEach(c => {
-                let btn = document.createElement('div');
-                btn.className = `grid-btn ${c === currentCat ? 'selected' : ''}`;
-                btn.innerText = c;
-                btn.onclick = () => { currentCat = c; renderOrdini(); };
-                catGrid.appendChild(btn);
-            });
+            if (catGrid) {
+                catGrid.innerHTML = '';
+                categorie.forEach(c => {
+                    let btn = document.createElement('div');
+                    btn.className = `grid-btn ${c === currentCat ? 'selected' : ''}`;
+                    btn.innerText = c;
+                    btn.onclick = () => { currentCat = c; renderOrdini(); };
+                    catGrid.appendChild(btn);
+                });
+            }
 
             let prodList = document.getElementById('prod-list');
+            if (!prodList) return;
             prodList.innerHTML = '';
+
             let filtered = prodotti.filter(p => p.cat === currentCat);
 
             if (filtered.length === 0) {
-                prodList.innerHTML = '<p style="font-size:13px; color:#64748b;">Nessun prodotto in questa categoria.</p>';
+                prodList.innerHTML = '<p style="font-size:13px; color:#64748b; padding:10px 0;">Nessun prodotto presente in questa categoria.</p>';
                 return;
             }
 
@@ -430,21 +439,25 @@
 
         function renderGestione() {
             let fSelect = document.getElementById('new-prod-fornitore');
-            fSelect.innerHTML = '';
-            fornitori.forEach(f => {
-                fSelect.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
-            });
+            if (fSelect) {
+                fSelect.innerHTML = '';
+                fornitori.forEach(f => {
+                    fSelect.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
+                });
+            }
 
             let fList = document.getElementById('fornitori-list');
-            fList.innerHTML = '';
-            fornitori.forEach((f, idx) => {
-                fList.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #e2e8f0;">
-                        <div><strong>${f.nome}</strong> (${f.tel})</div>
-                        <button class="btn btn-danger btn-sm" onclick="deleteFornitore(${idx})">Elimina</button>
-                    </div>
-                `;
-            });
+            if (fList) {
+                fList.innerHTML = '';
+                fornitori.forEach((f, idx) => {
+                    fList.innerHTML += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #e2e8f0;">
+                            <div><strong>${f.nome}</strong> (${f.tel})</div>
+                            <button class="btn btn-danger btn-sm" onclick="deleteFornitore(${idx})">Elimina</button>
+                        </div>
+                    `;
+                });
+            }
         }
 
         function addFornitore() {
@@ -478,11 +491,13 @@
             saveProductsToCloud();
             document.getElementById('new-prod-nome').value = '';
             document.getElementById('new-prod-prezzo').value = '';
-            alert('Prodotto aggiunto al Cloud!');
+            renderOrdini();
+            alert('Prodotto aggiunto!');
         }
 
         function renderStorico() {
             let container = document.getElementById('historico-list');
+            if (!container) return;
             if (storico.length === 0) {
                 container.innerHTML = 'Nessun ordine nello storico.';
                 return;
@@ -500,7 +515,9 @@
             });
         }
 
-        // Avvio
+        // Avvio immediato dell'interfaccia + richiesta dati cloud
+        renderOrdini();
+        updateHeaderTotal();
         fetchProductsFromCloud();
     </script>
 </body>
