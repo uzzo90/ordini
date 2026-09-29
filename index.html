@@ -177,10 +177,8 @@
         function fetchProductsFromCloud() {
             document.getElementById('sync-info').innerText = '⏳ Sincronizzazione...';
             
-            const script = document.createElement('script');
-            const callbackName = 'googleSheetsCallback_' + Math.floor(Math.random() * 1000000);
-            
-            window[callbackName] = function(data) {
+            const cbName = 'handleData_' + Date.now();
+            window[cbName] = function(data) {
                 if (Array.isArray(data)) {
                     prodotti = data.map(p => ({
                         id: String(p.id),
@@ -194,17 +192,15 @@
                     renderOrdini();
                     updateHeaderTotal();
                 }
-                delete window[callbackName];
-                if (script.parentNode) document.head.removeChild(script);
+                delete window[cbName];
+                if (script.parentNode) script.parentNode.removeChild(script);
             };
 
-            script.src = `${GOOGLE_SCRIPT_URL}?callback=${callbackName}`;
+            const script = document.createElement('script');
+            script.src = GOOGLE_SCRIPT_URL + '?callback=' + cbName;
             script.onerror = function() {
                 document.getElementById('sync-info').innerText = '⚠️ Errore Connessione';
-                delete window[callbackName];
-                if (script.parentNode) document.head.removeChild(script);
             };
-
             document.head.appendChild(script);
         }
 
@@ -214,7 +210,7 @@
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify(prodotti)
                 });
                 document.getElementById('sync-info').innerText = '☁️ Salvato su Cloud';
