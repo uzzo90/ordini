@@ -66,7 +66,7 @@
     <header>
         <div>
             <h1>Savino - Ordini</h1>
-            <span id="sync-info" class="sync-status">🔄 Sincronizzato Cloud</span>
+            <span id="sync-info" class="sync-status">🔄 Sincronizzazione...</span>
         </div>
         <span id="header-tot" style="font-size: 13px; background: #0284c7; padding: 4px 8px; border-radius: 4px;">Tot: €0.00</span>
     </header>
@@ -174,12 +174,14 @@
         let storico = JSON.parse(localStorage.getItem('savino_storico')) || [];
         let currentCat = 'Pesce';
 
-        async function fetchProductsFromCloud() {
+        function fetchProductsFromCloud() {
             document.getElementById('sync-info').innerText = '⏳ Sincronizzazione...';
-            try {
-                let res = await fetch(GOOGLE_SCRIPT_URL);
-                let data = await res.json();
-                if (Array.isArray(data) && data.length > 0) {
+            
+            const script = document.createElement('script');
+            const callbackName = 'googleSheetsCallback_' + Math.floor(Math.random() * 1000000);
+            
+            window[callbackName] = function(data) {
+                if (Array.isArray(data)) {
                     prodotti = data.map(p => ({
                         id: String(p.id),
                         nome: String(p.nome),
@@ -188,14 +190,22 @@
                         unita: String(p.unita),
                         prezzo: parseFloat(p.prezzo) || 0
                     }));
+                    document.getElementById('sync-info').innerText = '☁️ Sincronizzato';
+                    renderOrdini();
+                    updateHeaderTotal();
                 }
-                document.getElementById('sync-info').innerText = '☁️ Sincronizzato';
-            } catch(e) {
-                console.error("Errore Sync Cloud:", e);
-                document.getElementById('sync-info').innerText = '⚠️ Offline';
-            }
-            renderOrdini();
-            updateHeaderTotal();
+                delete window[callbackName];
+                if (script.parentNode) document.head.removeChild(script);
+            };
+
+            script.src = `${GOOGLE_SCRIPT_URL}?callback=${callbackName}`;
+            script.onerror = function() {
+                document.getElementById('sync-info').innerText = '⚠️ Errore Connessione';
+                delete window[callbackName];
+                if (script.parentNode) document.head.removeChild(script);
+            };
+
+            document.head.appendChild(script);
         }
 
         async function saveProductsToCloud() {
