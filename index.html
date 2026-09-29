@@ -66,7 +66,7 @@
     <header>
         <div>
             <h1>Savino - Ordini</h1>
-            <span id="sync-info" class="sync-status">🔄 Sincronizzazione...</span>
+            <span id="sync-info" class="sync-status">⚡ Pronto</span>
         </div>
         <span id="header-tot" style="font-size: 13px; background: #0284c7; padding: 4px 8px; border-radius: 4px;">Tot: €0.00</span>
     </header>
@@ -88,9 +88,9 @@
             <div class="card">
                 <div class="card-title">
                     <span>Prodotti</span>
-                    <button class="btn btn-secondary btn-sm" onclick="fetchProductsFromCloud()">🔄 Ricarica</button>
+                    <button class="btn btn-secondary btn-sm" onclick="fetchProductsFromCloud()">🔄 Sincronizza Cloud</button>
                 </div>
-                <div id="prod-list">Inizializzazione...</div>
+                <div id="prod-list">Caricamento in corso...</div>
             </div>
         </div>
 
@@ -172,7 +172,11 @@
         ];
 
         let fornitori = JSON.parse(localStorage.getItem('savino_fornitori')) || defaultFornitori;
-        let prodotti = JSON.parse(localStorage.getItem('savino_cache_prodotti')) || [];
+        let prodotti = JSON.parse(localStorage.getItem('savino_cache_prodotti')) || [
+            { id: 'p1', nome: 'Sarde Fresche', cat: 'Pesce', fornitoreId: 'f2', unita: 'kg', prezzo: 8.5 },
+            { id: 'p2', nome: 'Gambero Rosso', cat: 'Pesce', fornitoreId: 'f2', unita: 'kg', prezzo: 35.0 },
+            { id: 'p3', nome: 'Pomodoro Ciliegino', cat: 'Ortofrutta', fornitoreId: 'f1', unita: 'kg', prezzo: 2.2 }
+        ];
         let carrello = JSON.parse(localStorage.getItem('savino_carrello')) || {};
         let storico = JSON.parse(localStorage.getItem('savino_storico')) || [];
         let currentCat = 'Pesce';
@@ -192,37 +196,43 @@
         function fetchProductsFromCloud() {
             document.getElementById('sync-info').innerText = '⏳ Sincronizzazione...';
             
-            const callbackName = 'savinoCallback_' + Math.floor(Math.random() * 1000000);
-            
-            window[callbackName] = function(data) {
-                if (Array.isArray(data)) {
-                    prodotti = data.map(p => ({
-                        id: String(p.id || p.ID || 'p_' + Math.random()),
-                        nome: String(p.nome || p.Nome || p.PRODOTTO || ''),
-                        cat: String(p.cat || p.Categoria || p.CATEGORIA || 'Altro'),
-                        fornitoreId: String(p.fornitoreId || p.fornitore || p.FORNITORE || ''),
-                        unita: String(p.unita || p.Unita || p.UNITA || 'kg'),
-                        prezzo: parsePrice(p.prezzo || p.Prezzo || p.PREZZO)
-                    }));
-                    localStorage.setItem('savino_cache_prodotti', JSON.stringify(prodotti));
-                    document.getElementById('sync-info').innerText = '☁️ Sincronizzato';
-                    renderOrdini();
-                    updateHeaderTotal();
-                }
-                delete window[callbackName];
-                let s = document.getElementById(callbackName);
-                if (s) s.remove();
-            };
+            let loaded = false;
 
-            const script = document.createElement('script');
-            script.id = callbackName;
-            script.src = GOOGLE_SCRIPT_URL + '?callback=' + callbackName;
-            script.onerror = function() {
-                document.getElementById('sync-info').innerText = '⚠️ Errore Connessione';
-                renderOrdini();
-                delete window[callbackName];
-            };
-            document.head.appendChild(script);
+            // Timeout di sicurezza per non bloccare l'interfaccia
+            const timer = setTimeout(() => {
+                if (!loaded) {
+                    document.getElementById('sync-info').innerText = '📱 Dati Locali';
+                    renderOrdini();
+                }
+            }, 4000);
+
+            // Fetch asincrono diretto
+            fetch(GOOGLE_SCRIPT_URL)
+                .then(res => res.json())
+                .then(data => {
+                    loaded = true;
+                    clearTimeout(timer);
+                    if (Array.isArray(data)) {
+                        prodotti = data.map(p => ({
+                            id: String(p.id || p.ID || 'p_' + Math.random()),
+                            nome: String(p.nome || p.Nome || p.PRODOTTO || ''),
+                            cat: String(p.cat || p.Categoria || p.CATEGORIA || 'Altro'),
+                            fornitoreId: String(p.fornitoreId || p.fornitore || p.FORNITORE || ''),
+                            unita: String(p.unita || p.Unita || p.UNITA || 'kg'),
+                            prezzo: parsePrice(p.prezzo || p.Prezzo || p.PREZZO)
+                        }));
+                        localStorage.setItem('savino_cache_prodotti', JSON.stringify(prodotti));
+                        document.getElementById('sync-info').innerText = '☁️ Sincronizzato';
+                        renderOrdini();
+                        updateHeaderTotal();
+                    }
+                })
+                .catch(() => {
+                    loaded = true;
+                    clearTimeout(timer);
+                    document.getElementById('sync-info').innerText = '📱 Dati Locali';
+                    renderOrdini();
+                });
         }
 
         async function saveProductsToCloud() {
@@ -237,8 +247,7 @@
                 });
                 document.getElementById('sync-info').innerText = '☁️ Salvato su Cloud';
             } catch(e) {
-                console.error("Errore Salvataggio Cloud:", e);
-                document.getElementById('sync-info').innerText = '⚠️ Errore Cloud';
+                document.getElementById('sync-info').innerText = '⚠️ Salvato in Locale';
             }
         }
 
@@ -515,7 +524,7 @@
             });
         }
 
-        // Avvio immediato dell'interfaccia + richiesta dati cloud
+        // Avvio immediato
         renderOrdini();
         updateHeaderTotal();
         fetchProductsFromCloud();
