@@ -9,7 +9,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1e293b">
-    <link rel="manifest" href="data:application/json,{%22name%22:%22Savino%20Ordini%22,%22short_name%22:%22Ordini%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%231e293b%22,%22theme_color%22:%22%231e293b%22}">
 
     <!-- XLSX Library -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -22,7 +21,7 @@
         header h1 { font-size: 18px; font-weight: 700; }
         
         nav { display: flex; background: #0f172a; border-bottom: 1px solid #334155; overflow-x: auto; }
-        .nav-btn { flex: 1; min-width: 75px; padding: 10px 4px; text-align: center; color: #94a3b8; background: none; border: none; font-size: 11px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
+        .nav-btn { flex: 1; min-width: 75px; padding: 12px 4px; text-align: center; color: #94a3b8; background: none; border: none; font-size: 11px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
         .nav-btn.active { color: #38bdf8; border-bottom-color: #38bdf8; background-color: rgba(255,255,255,0.05); }
 
         .main-content { flex: 1; overflow-y: auto; padding: 12px; }
@@ -58,7 +57,7 @@
         .excel-table tr:hover { background-color: #f1f5f9; }
         .excel-table input { margin-bottom: 0; padding: 4px; font-size: 12px; border: 1px solid #38bdf8; }
         
-        .sync-status { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #334155; color: #38bdf8; }
+        .status-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #16a34a; color: white; }
     </style>
 </head>
 <body>
@@ -66,7 +65,7 @@
     <header>
         <div>
             <h1>Savino - Ordini</h1>
-            <span id="sync-info" class="sync-status">⚡ Pronto</span>
+            <span class="status-badge">⚡ Locale / Stabile</span>
         </div>
         <span id="header-tot" style="font-size: 13px; background: #0284c7; padding: 4px 8px; border-radius: 4px;">Tot: €0.00</span>
     </header>
@@ -86,11 +85,8 @@
                 <div class="grid-select" id="cat-grid"></div>
             </div>
             <div class="card">
-                <div class="card-title">
-                    <span>Prodotti</span>
-                    <button class="btn btn-secondary btn-sm" onclick="fetchProductsFromCloud()">🔄 Sincronizza Cloud</button>
-                </div>
-                <div id="prod-list">Caricamento in corso...</div>
+                <div class="card-title">Prodotti</div>
+                <div id="prod-list"></div>
             </div>
         </div>
 
@@ -101,8 +97,7 @@
         <div id="tab-foglio" class="tab-content">
             <div class="card" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
                 <div>
-                    <h3 style="font-size:14px; font-weight:700;">Catalogo Globale Cloud</h3>
-                    <p style="font-size:11px; color:#64748b;">Le modifiche si aggiornano ovunque in tempo reale.</p>
+                    <h3 style="font-size:14px; font-weight:700;">Catalogo Prodotti Locale</h3>
                 </div>
                 <button class="btn btn-success" onclick="exportToExcel()">📥 Scarica Excel</button>
             </div>
@@ -164,19 +159,19 @@
     </div>
 
     <script>
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9FshhCaBCl8yqXMGO6I9yGBcCpfpQHlFozFZOLsbjmDOReYjyllFzXwjN-EyFfIKB/exec';
-
         let defaultFornitori = [
             { id: 'f1', nome: 'Ortofrutta Locale', tel: '+39330000001' },
             { id: 'f2', nome: 'Pescheria del Porto', tel: '+39330000002' }
         ];
 
-        let fornitori = JSON.parse(localStorage.getItem('savino_fornitori')) || defaultFornitori;
-        let prodotti = JSON.parse(localStorage.getItem('savino_cache_prodotti')) || [
+        let defaultProdotti = [
             { id: 'p1', nome: 'Sarde Fresche', cat: 'Pesce', fornitoreId: 'f2', unita: 'kg', prezzo: 8.5 },
             { id: 'p2', nome: 'Gambero Rosso', cat: 'Pesce', fornitoreId: 'f2', unita: 'kg', prezzo: 35.0 },
             { id: 'p3', nome: 'Pomodoro Ciliegino', cat: 'Ortofrutta', fornitoreId: 'f1', unita: 'kg', prezzo: 2.2 }
         ];
+
+        let fornitori = JSON.parse(localStorage.getItem('savino_fornitori')) || defaultFornitori;
+        let prodotti = JSON.parse(localStorage.getItem('savino_prodotti')) || defaultProdotti;
         let carrello = JSON.parse(localStorage.getItem('savino_carrello')) || {};
         let storico = JSON.parse(localStorage.getItem('savino_storico')) || [];
         let currentCat = 'Pesce';
@@ -193,66 +188,9 @@
             return f ? f.nome : fId;
         }
 
-        function fetchProductsFromCloud() {
-            document.getElementById('sync-info').innerText = '⏳ Sincronizzazione...';
-            
-            let loaded = false;
-
-            // Timeout di sicurezza per non bloccare l'interfaccia
-            const timer = setTimeout(() => {
-                if (!loaded) {
-                    document.getElementById('sync-info').innerText = '📱 Dati Locali';
-                    renderOrdini();
-                }
-            }, 4000);
-
-            // Fetch asincrono diretto
-            fetch(GOOGLE_SCRIPT_URL)
-                .then(res => res.json())
-                .then(data => {
-                    loaded = true;
-                    clearTimeout(timer);
-                    if (Array.isArray(data)) {
-                        prodotti = data.map(p => ({
-                            id: String(p.id || p.ID || 'p_' + Math.random()),
-                            nome: String(p.nome || p.Nome || p.PRODOTTO || ''),
-                            cat: String(p.cat || p.Categoria || p.CATEGORIA || 'Altro'),
-                            fornitoreId: String(p.fornitoreId || p.fornitore || p.FORNITORE || ''),
-                            unita: String(p.unita || p.Unita || p.UNITA || 'kg'),
-                            prezzo: parsePrice(p.prezzo || p.Prezzo || p.PREZZO)
-                        }));
-                        localStorage.setItem('savino_cache_prodotti', JSON.stringify(prodotti));
-                        document.getElementById('sync-info').innerText = '☁️ Sincronizzato';
-                        renderOrdini();
-                        updateHeaderTotal();
-                    }
-                })
-                .catch(() => {
-                    loaded = true;
-                    clearTimeout(timer);
-                    document.getElementById('sync-info').innerText = '📱 Dati Locali';
-                    renderOrdini();
-                });
-        }
-
-        async function saveProductsToCloud() {
-            document.getElementById('sync-info').innerText = '⏳ Salvataggio Cloud...';
-            localStorage.setItem('savino_cache_prodotti', JSON.stringify(prodotti));
-            try {
-                await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify(prodotti)
-                });
-                document.getElementById('sync-info').innerText = '☁️ Salvato su Cloud';
-            } catch(e) {
-                document.getElementById('sync-info').innerText = '⚠️ Salvato in Locale';
-            }
-        }
-
         function saveData() {
             localStorage.setItem('savino_fornitori', JSON.stringify(fornitori));
+            localStorage.setItem('savino_prodotti', JSON.stringify(prodotti));
             localStorage.setItem('savino_carrello', JSON.stringify(carrello));
             localStorage.setItem('savino_storico', JSON.stringify(storico));
             updateHeaderTotal();
@@ -418,13 +356,13 @@
 
         function updateProdField(idx, field, value) {
             prodotti[idx][field] = value;
-            saveProductsToCloud();
+            saveData();
         }
 
         function deleteProdotto(idx) {
             if (confirm("Eliminare questo prodotto?")) {
                 prodotti.splice(idx, 1);
-                saveProductsToCloud();
+                saveData();
                 renderFoglio();
             }
         }
@@ -497,7 +435,7 @@
 
             if (!nome) return alert('Inserisci il nome del prodotto');
             prodotti.push({ id: 'p_' + Date.now(), nome, cat, fornitoreId, unita, prezzo });
-            saveProductsToCloud();
+            saveData();
             document.getElementById('new-prod-nome').value = '';
             document.getElementById('new-prod-prezzo').value = '';
             renderOrdini();
@@ -524,10 +462,9 @@
             });
         }
 
-        // Avvio immediato
+        // AVVIO IMMEDIATO LOCALE
+        saveData();
         renderOrdini();
-        updateHeaderTotal();
-        fetchProductsFromCloud();
     </script>
 </body>
 </html>
