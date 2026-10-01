@@ -4,59 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ristorante Savino - Gestione Ordini</title>
-    
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#1e293b">
-
-    <!-- XLSX Library -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #f8fafc; color: #0f172a; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        header { background-color: #1e293b; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        header h1 { font-size: 18px; font-weight: 700; }
-        
-        nav { display: flex; background: #0f172a; border-bottom: 1px solid #334155; overflow-x: auto; }
-        .nav-btn { flex: 1; min-width: 75px; padding: 12px 4px; text-align: center; color: #94a3b8; background: none; border: none; font-size: 11px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
-        .nav-btn.active { color: #38bdf8; border-bottom-color: #38bdf8; background-color: rgba(255,255,255,0.05); }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #f8fafc; color: #0f172a; display: flex; flex-direction: column; height: 100vh; }
+        header { background-color: #1e293b; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 16px; font-weight: 700; }
+        nav { display: flex; background: #0f172a; border-bottom: 1px solid #334155; }
+        .nav-btn { flex: 1; padding: 12px 4px; text-align: center; color: #94a3b8; background: none; border: none; font-size: 11px; font-weight: 600; cursor: pointer; }
+        .nav-btn.active { color: #38bdf8; border-bottom: 3px solid #38bdf8; background-color: rgba(255,255,255,0.05); }
         .main-content { flex: 1; overflow-y: auto; padding: 12px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-
-        .card { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .card-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-
-        .btn { padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        .card { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 12px; margin-bottom: 12px; }
+        .card-title { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+        .btn { padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; }
         .btn-primary { background-color: #0284c7; color: white; }
         .btn-success { background-color: #16a34a; color: white; }
         .btn-danger { background-color: #dc2626; color: white; }
-        .btn-secondary { background-color: #64748b; color: white; }
-        .btn-sm { padding: 4px 8px; font-size: 11px; }
-
-        .grid-select { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 12px; }
-        .grid-btn { padding: 10px 6px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer; }
+        .grid-select { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; margin-bottom: 12px; }
+        .grid-btn { padding: 8px 4px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; font-size: 12px; font-weight: 600; cursor: pointer; }
         .grid-btn.selected { background: #0284c7; color: white; border-color: #0284c7; }
-
         .product-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
         .qty-controls { display: flex; align-items: center; gap: 8px; }
-        .qty-btn { width: 32px; height: 32px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; font-size: 16px; cursor: pointer; }
-        .qty-val { width: 40px; text-align: center; font-weight: bold; font-size: 14px; }
-
+        .qty-btn { width: 32px; height: 32px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; font-size: 16px; }
+        .qty-val { width: 30px; text-align: center; font-weight: bold; font-size: 14px; }
         input, select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-bottom: 8px; }
-
-        .excel-table-container { overflow-x: auto; max-height: calc(100vh - 180px); border: 1px solid #cbd5e1; border-radius: 6px; background: white; }
-        .excel-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
-        .excel-table th { background: #1e293b; color: white; padding: 8px; position: sticky; top: 0; font-weight: 600; white-space: nowrap; border: 1px solid #334155; }
-        .excel-table td { padding: 6px 8px; border: 1px solid #e2e8f0; white-space: nowrap; }
-        .excel-table tr:nth-child(even) { background-color: #f8fafc; }
-        .excel-table tr:hover { background-color: #f1f5f9; }
-        .excel-table input { margin-bottom: 0; padding: 4px; font-size: 12px; border: 1px solid #38bdf8; }
-        
         .status-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #16a34a; color: white; }
     </style>
 </head>
@@ -64,24 +36,22 @@
 
     <header>
         <div>
-            <h1>Savino - Ordini</h1>
-            <span class="status-badge">⚡ Locale / Stabile</span>
+            <h1>Savino Ordini</h1>
+            <span class="status-badge">⚡ Attivo / Locale</span>
         </div>
-        <span id="header-tot" style="font-size: 13px; background: #0284c7; padding: 4px 8px; border-radius: 4px;">Tot: €0.00</span>
+        <span id="header-tot" style="font-size: 12px; background: #0284c7; padding: 4px 8px; border-radius: 4px;">Tot: €0.00</span>
     </header>
 
     <nav>
         <button class="nav-btn active" onclick="switchTab('tab-ordini', event)">🛒 Ordina</button>
         <button class="nav-btn" onclick="switchTab('tab-fornitori', event)">📱 Invia</button>
-        <button class="nav-btn" onclick="switchTab('tab-foglio', event)">📊 Foglio</button>
         <button class="nav-btn" onclick="switchTab('tab-gestione', event)">⚙️ Gestisci</button>
-        <button class="nav-btn" onclick="switchTab('tab-storico', event)">📜 Storico</button>
     </nav>
 
     <div class="main-content">
         <div id="tab-ordini" class="tab-content active">
             <div class="card">
-                <div class="card-title">Seleziona Categoria</div>
+                <div class="card-title">Categorie</div>
                 <div class="grid-select" id="cat-grid"></div>
             </div>
             <div class="card">
@@ -92,30 +62,6 @@
 
         <div id="tab-fornitori" class="tab-content">
             <div id="summary-fornitori">Nessun prodotto selezionato.</div>
-        </div>
-
-        <div id="tab-foglio" class="tab-content">
-            <div class="card" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                <div>
-                    <h3 style="font-size:14px; font-weight:700;">Catalogo Prodotti Locale</h3>
-                </div>
-                <button class="btn btn-success" onclick="exportToExcel()">📥 Scarica Excel</button>
-            </div>
-            <div class="excel-table-container">
-                <table class="excel-table">
-                    <thead>
-                        <tr>
-                            <th>Prodotto</th>
-                            <th>Categoria</th>
-                            <th>Fornitore</th>
-                            <th>Unità</th>
-                            <th>Prezzo (€)</th>
-                            <th>Azione</th>
-                        </tr>
-                    </thead>
-                    <tbody id="excel-tbody"></tbody>
-                </table>
-            </div>
         </div>
 
         <div id="tab-gestione" class="tab-content">
@@ -140,20 +86,12 @@
                 </select>
                 <select id="new-prod-fornitore"></select>
                 <input type="text" id="new-prod-unita" placeholder="Unità (es. kg, cassa)">
-                <input type="text" id="new-prod-prezzo" placeholder="Prezzo (€) es. 12.50">
+                <input type="text" id="new-prod-prezzo" placeholder="Prezzo (€)">
                 <button class="btn btn-primary" onclick="addProdotto()">+ Aggiungi Prodotto</button>
             </div>
 
-            <div class="card">
-                <div class="card-title">Fornitori Registrati</div>
-                <div id="fornitori-list"></div>
-            </div>
-        </div>
-
-        <div id="tab-storico" class="tab-content">
-            <div class="card">
-                <div class="card-title">Storico Ordini Inviati</div>
-                <div id="historico-list">Nessun ordine salvato nello storico.</div>
+            <div class="card" style="text-align:center;">
+                <button class="btn btn-danger" onclick="resetLocale()">⚠ Ripristina Memoria App</button>
             </div>
         </div>
     </div>
@@ -173,41 +111,29 @@
         let fornitori = JSON.parse(localStorage.getItem('savino_fornitori')) || defaultFornitori;
         let prodotti = JSON.parse(localStorage.getItem('savino_prodotti')) || defaultProdotti;
         let carrello = JSON.parse(localStorage.getItem('savino_carrello')) || {};
-        let storico = JSON.parse(localStorage.getItem('savino_storico')) || [];
         let currentCat = 'Pesce';
 
         function parsePrice(val) {
-            if (val === undefined || val === null) return 0;
-            let str = String(val).replace(',', '.');
-            let num = parseFloat(str);
+            if (!val) return 0;
+            let num = parseFloat(String(val).replace(',', '.'));
             return isNaN(num) ? 0 : num;
-        }
-
-        function getFornitoreNome(fId) {
-            let f = fornitori.find(x => x.id === fId || x.nome === fId);
-            return f ? f.nome : fId;
         }
 
         function saveData() {
             localStorage.setItem('savino_fornitori', JSON.stringify(fornitori));
             localStorage.setItem('savino_prodotti', JSON.stringify(prodotti));
             localStorage.setItem('savino_carrello', JSON.stringify(carrello));
-            localStorage.setItem('savino_storico', JSON.stringify(storico));
             updateHeaderTotal();
         }
 
         function switchTab(tabId, ev) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-            
             document.getElementById(tabId).classList.add('active');
             if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
-
             if (tabId === 'tab-ordini') renderOrdini();
             if (tabId === 'tab-fornitori') renderInvio();
-            if (tabId === 'tab-foglio') renderFoglio();
             if (tabId === 'tab-gestione') renderGestione();
-            if (tabId === 'tab-storico') renderStorico();
         }
 
         function updateHeaderTotal() {
@@ -222,25 +148,21 @@
         function renderOrdini() {
             let categorie = ['Pesce', 'Carne', 'Ortofrutta', 'Secco/Scatolame', 'Latticini', 'Bevande', 'Altro'];
             let catGrid = document.getElementById('cat-grid');
-            if (catGrid) {
-                catGrid.innerHTML = '';
-                categorie.forEach(c => {
-                    let btn = document.createElement('div');
-                    btn.className = `grid-btn ${c === currentCat ? 'selected' : ''}`;
-                    btn.innerText = c;
-                    btn.onclick = () => { currentCat = c; renderOrdini(); };
-                    catGrid.appendChild(btn);
-                });
-            }
+            catGrid.innerHTML = '';
+            categorie.forEach(c => {
+                let btn = document.createElement('div');
+                btn.className = `grid-btn ${c === currentCat ? 'selected' : ''}`;
+                btn.innerText = c;
+                btn.onclick = () => { currentCat = c; renderOrdini(); };
+                catGrid.appendChild(btn);
+            });
 
             let prodList = document.getElementById('prod-list');
-            if (!prodList) return;
             prodList.innerHTML = '';
-
             let filtered = prodotti.filter(p => p.cat === currentCat);
 
             if (filtered.length === 0) {
-                prodList.innerHTML = '<p style="font-size:13px; color:#64748b; padding:10px 0;">Nessun prodotto presente in questa categoria.</p>';
+                prodList.innerHTML = '<p style="font-size:13px; color:#64748b; padding:10px 0;">Nessun prodotto presente.</p>';
                 return;
             }
 
@@ -275,7 +197,6 @@
         function renderInvio() {
             let container = document.getElementById('summary-fornitori');
             container.innerHTML = '';
-
             let grouped = {};
             for (let id in carrello) {
                 let p = prodotti.find(x => x.id === id);
@@ -291,120 +212,38 @@
             }
 
             for (let fId in grouped) {
-                let fName = getFornitoreNome(fId);
-                let fObj = fornitori.find(x => x.id === fId || x.nome === fId) || { tel: '' };
+                let fObj = fornitori.find(x => x.id === fId) || { nome: 'Fornitore', tel: '' };
                 let items = grouped[fId];
                 let subtot = 0;
                 let textMsg = `*ORDINE RISTORANTE SAVINO*\n\n`;
 
                 let card = document.createElement('div');
                 card.className = 'card';
-                let html = `<div class="card-title"><span>${fName}</span></div><ul style="margin-bottom:10px; font-size:13px; list-style:none;">`;
+                let html = `<div class="card-title">${fObj.nome}</div><ul style="margin-bottom:10px; font-size:13px; list-style:none;">`;
 
                 items.forEach(i => {
                     let cost = i.qty * i.prod.prezzo;
                     subtot += cost;
-                    html += `<li style="padding:4px 0; border-bottom:1px solid #f1f5f9;">${i.prod.nome}: <strong>${i.qty} ${i.prod.unita}</strong> (€${cost.toFixed(2)})</li>`;
+                    html += `<li style="padding:4px 0;">${i.prod.nome}: <strong>${i.qty} ${i.prod.unita}</strong> (€${cost.toFixed(2)})</li>`;
                     textMsg += `• ${i.prod.nome}: ${i.qty} ${i.prod.unita}\n`;
                 });
 
-                textMsg += `\n*Totale Stimato: €${subtot.toFixed(2)}*`;
+                textMsg += `\n*Totale: €${subtot.toFixed(2)}*`;
                 html += `</ul><div style="display:flex; justify-content:space-between; align-items:center;">
                             <strong>Totale: €${subtot.toFixed(2)}</strong>
-                            <button class="btn btn-success" onclick="inviaWhatsApp('${fObj.tel}', \`${encodeURIComponent(textMsg)}\`, '${fId}')">📱 Invia via WhatsApp</button>
+                            <button class="btn btn-success" onclick="window.open('https://wa.me/${fObj.tel}?text=${encodeURIComponent(textMsg)}', '_blank')">📱 WhatsApp</button>
                          </div>`;
                 card.innerHTML = html;
                 container.appendChild(card);
             }
         }
 
-        function inviaWhatsApp(tel, encodedMsg, fId) {
-            storico.push({
-                data: new Date().toLocaleString('it-IT'),
-                fornitoreId: fId,
-                dettaglio: decodeURIComponent(encodedMsg)
-            });
-            saveData();
-            window.open(`https://wa.me/${tel}?text=${encodedMsg}`, '_blank');
-        }
-
-        function renderFoglio() {
-            let tbody = document.getElementById('excel-tbody');
-            tbody.innerHTML = '';
-
-            prodotti.forEach((p, idx) => {
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><input type="text" value="${p.nome}" onchange="updateProdField(${idx}, 'nome', this.value)"></td>
-                    <td>
-                        <select onchange="updateProdField(${idx}, 'cat', this.value)" style="margin:0; padding:2px;">
-                            ${['Pesce','Carne','Ortofrutta','Secco/Scatolame','Latticini','Bevande','Altro'].map(c => `<option value="${c}" ${c === p.cat ? 'selected' : ''}>${c}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td>
-                        <select onchange="updateProdField(${idx}, 'fornitoreId', this.value)" style="margin:0; padding:2px;">
-                            ${fornitori.map(fItem => `<option value="${fItem.id}" ${fItem.id === p.fornitoreId \vert{}\vert{} fItem.nome === p.fornitoreId ? 'selected' : ''}>${fItem.nome}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td><input type="text" value="${p.unita}" style="width:60px;" onchange="updateProdField(${idx}, 'unita', this.value)"></td>
-                    <td><input type="text" value="${p.prezzo}" style="width:70px;" onchange="updateProdField(${idx}, 'prezzo', parsePrice(this.value))"></td>
-                    <td><button class="btn btn-danger btn-sm" onclick="deleteProdotto(${idx})">🗑️</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function updateProdField(idx, field, value) {
-            prodotti[idx][field] = value;
-            saveData();
-        }
-
-        function deleteProdotto(idx) {
-            if (confirm("Eliminare questo prodotto?")) {
-                prodotti.splice(idx, 1);
-                saveData();
-                renderFoglio();
-            }
-        }
-
-        function exportToExcel() {
-            let dataExport = prodotti.map(p => {
-                return {
-                    'Prodotto': p.nome,
-                    'Categoria': p.cat,
-                    'Fornitore': getFornitoreNome(p.fornitoreId),
-                    'Unità di Misura': p.unita,
-                    'Prezzo (€)': p.prezzo
-                };
-            });
-
-            let worksheet = XLSX.utils.json_to_sheet(dataExport);
-            let workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Prodotti Savino");
-            XLSX.writeFile(workbook, "Catalogo_Prodotti_Savino.xlsx");
-        }
-
         function renderGestione() {
             let fSelect = document.getElementById('new-prod-fornitore');
-            if (fSelect) {
-                fSelect.innerHTML = '';
-                fornitori.forEach(f => {
-                    fSelect.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
-                });
-            }
-
-            let fList = document.getElementById('fornitori-list');
-            if (fList) {
-                fList.innerHTML = '';
-                fornitori.forEach((f, idx) => {
-                    fList.innerHTML += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #e2e8f0;">
-                            <div><strong>${f.nome}</strong> (${f.tel})</div>
-                            <button class="btn btn-danger btn-sm" onclick="deleteFornitore(${idx})">Elimina</button>
-                        </div>
-                    `;
-                });
-            }
+            fSelect.innerHTML = '';
+            fornitori.forEach(f => {
+                fSelect.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
+            });
         }
 
         function addFornitore() {
@@ -416,14 +255,6 @@
             document.getElementById('new-fornitore-nome').value = '';
             document.getElementById('new-fornitore-tel').value = '';
             renderGestione();
-        }
-
-        function deleteFornitore(idx) {
-            if (confirm("Eliminare questo fornitore?")) {
-                fornitori.splice(idx, 1);
-                saveData();
-                renderGestione();
-            }
         }
 
         function addProdotto() {
@@ -442,27 +273,13 @@
             alert('Prodotto aggiunto!');
         }
 
-        function renderStorico() {
-            let container = document.getElementById('historico-list');
-            if (!container) return;
-            if (storico.length === 0) {
-                container.innerHTML = 'Nessun ordine nello storico.';
-                return;
+        function resetLocale() {
+            if (confirm("Ripristinare l'app allo stato iniziale?")) {
+                localStorage.clear();
+                location.reload();
             }
-            container.innerHTML = '';
-            storico.slice().reverse().forEach(item => {
-                let fName = getFornitoreNome(item.fornitoreId);
-                let card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <div style="font-size:12px; color:#64748b; margin-bottom:4px;">${item.data} - <strong>${fName}</strong></div>
-                    <pre style="font-size:12px; white-space:pre-wrap; background:#f8fafc; padding:8px; border-radius:4px;">${item.dettaglio}</pre>
-                `;
-                container.appendChild(card);
-            });
         }
 
-        // AVVIO IMMEDIATO LOCALE
         saveData();
         renderOrdini();
     </script>
