@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ristorante Savino - Gestione Ordini</title>
+    <title>UZZO CHEF ordini</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #f8fafc; color: #0f172a; display: flex; flex-direction: column; height: 100vh; }
@@ -18,7 +18,6 @@
         .card { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 12px; margin-bottom: 12px; }
         .card-title { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* Titolo della card cliccabile per tendina */
         .card-title-collapsible { font-size: 14px; font-weight: 700; color: #1e293b; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
         
         .btn { padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; }
@@ -38,13 +37,11 @@
         textarea { resize: vertical; min-height: 80px; font-family: monospace; }
         .status-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #16a34a; color: white; }
         
-        /* Tabella Indice Catalogo */
         .catalog-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
         .catalog-table th { background: #f1f5f9; text-align: left; padding: 6px 8px; color: #475569; font-weight: 600; border-bottom: 1px solid #cbd5e1; }
         .catalog-table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
         .actions-cell { display: flex; gap: 4px; justify-content: flex-end; }
         
-        /* Contenitore a tendina */
         .collapsible-body { display: block; margin-top: 4px; }
         .collapsible-body.collapsed { display: none; }
         .arrow-icon { font-size: 12px; color: #0284c7; margin-left: 6px; transition: transform 0.2s; }
@@ -55,7 +52,7 @@
 
     <header>
         <div>
-            <h1>Savino Ordini</h1>
+            <h1>UZZO CHEF ordini</h1>
             <span class="status-badge">⚡ Attivo / Locale</span>
         </div>
         <span id="header-tot" style="font-size: 12px; background: #0284c7; padding: 4px 8px; border-radius: 4px;">Tot: €0.00</span>
@@ -86,7 +83,7 @@
             <div id="summary-fornitori">Nessun prodotto selezionato.</div>
         </div>
 
-        <!-- TAB INDICE CATALOGO (CON TENDINE COMPRIMIBILI) -->
+        <!-- TAB INDICE CATALOGO -->
         <div id="tab-indice" class="tab-content">
             <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
@@ -272,7 +269,7 @@
                 let fObj = fornitori.find(x => x.id === fId) || { nome: 'Fornitore', tel: '' };
                 let items = grouped[fId];
                 let subtot = 0;
-                let textMsg = `*ORDINE RISTORANTE SAVINO*\n\n`;
+                let textMsg = `*ORDINE UZZO CHEF*\n\n`;
 
                 let card = document.createElement('div');
                 card.className = 'card';
@@ -295,7 +292,6 @@
             }
         }
 
-        /* RENDERING INDICE CATALOGO CON SCHEDE A TENDINA */
         function renderIndice() {
             let container = document.getElementById('indice-container');
             container.innerHTML = '';
@@ -351,7 +347,6 @@
             });
         }
 
-        /* FUNZIONE PER APRIRE/CHIUDERE LA TENDINA */
         function toggleCollapsible(bodyId, arrowId) {
             let body = document.getElementById(bodyId);
             let arrow = document.getElementById(arrowId);
@@ -418,8 +413,8 @@
 
             let worksheet = XLSX.utils.json_to_sheet(exportData);
             let workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Catalogo Savino");
-            XLSX.writeFile(workbook, "Catalogo_Fornitori_Savino.xlsx");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Catalogo Uzzo Chef");
+            XLSX.writeFile(workbook, "Catalogo_Fornitori_UzzoChef.xlsx");
         }
 
         function renderGestione() {
