@@ -4,49 +4,180 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>UZZO CHEF ordini</title>
+    
+    <!-- Font Moderno Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #f8fafc; color: #0f172a; display: flex; flex-direction: column; height: 100vh; }
-        header { background-color: #1e293b; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
-        header h1 { font-size: 16px; font-weight: 700; }
-        nav { display: flex; background: #0f172a; border-bottom: 1px solid #334155; overflow-x: auto; }
-        .nav-btn { flex: 1; min-width: 65px; padding: 12px 4px; text-align: center; color: #94a3b8; background: none; border: none; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-        .nav-btn.active { color: #38bdf8; border-bottom: 3px solid #38bdf8; background-color: rgba(255,255,255,0.05); }
-        .main-content { flex: 1; overflow-y: auto; padding: 12px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #f1f5f9; color: #0f172a; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* EFFETTO VETRO (GLASSMORPHISM) HEADER & NAV */
+        header { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            color: #0f172a; 
+            padding: 12px 16px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        header h1 { font-size: 17px; font-weight: 800; background: linear-gradient(135deg, #0284c7, #0369a1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        nav { 
+            display: flex; 
+            background: rgba(255, 255, 255, 0.75); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0; 
+            overflow-x: auto; 
+            position: sticky;
+            top: 53px;
+            z-index: 99;
+        }
+        .nav-btn { 
+            flex: 1; 
+            min-width: 70px; 
+            padding: 12px 6px; 
+            text-align: center; 
+            color: #64748b; 
+            background: none; 
+            border: none; 
+            font-size: 12px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            white-space: nowrap; 
+            border-bottom: 3px solid transparent; 
+            transition: all 0.2s ease;
+        }
+        .nav-btn.active { color: #0284c7; border-bottom-color: #0284c7; background-color: rgba(2, 132, 199, 0.05); }
+
+        .main-content { flex: 1; overflow-y: auto; padding: 14px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .card { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 12px; margin-bottom: 12px; }
-        .card-title { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* CARDS MODERN */
+        .card { 
+            background: #ffffff; 
+            border-radius: 12px; 
+            border: 1px solid #e2e8f0; 
+            padding: 14px; 
+            margin-bottom: 14px; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
         
-        .card-title-collapsible { font-size: 14px; font-weight: 700; color: #1e293b; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .card-title { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         
-        .btn { padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; }
-        .btn-primary { background-color: #0284c7; color: white; }
-        .btn-success { background-color: #16a34a; color: white; }
-        .btn-danger { background-color: #dc2626; color: white; }
-        .btn-warning { background-color: #d97706; color: white; }
-        .btn-sm { padding: 4px 8px; font-size: 11px; }
-        .grid-select { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; margin-bottom: 12px; }
-        .grid-btn { padding: 8px 4px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .grid-btn.selected { background: #0284c7; color: white; border-color: #0284c7; }
-        .product-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+        /* CARD TENDINA CON ROTAZIONE FRECCIA */
+        .card-title-collapsible { font-size: 14px; font-weight: 700; color: #1e293b; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; padding: 2px 0; }
+        .arrow-icon { font-size: 11px; color: #0284c7; transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); display: inline-block; }
+        .arrow-icon.rotated { transform: rotate(180deg); }
+
+        /* PULSANTI CON MICRO-INTERAZIONI */
+        .btn { 
+            padding: 9px 14px; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            font-size: 13px; 
+            border: none; 
+            cursor: pointer; 
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-primary { background-color: #0284c7; color: white; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2); }
+        .btn-success { background-color: #16a34a; color: white; box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2); }
+        .btn-danger { background-color: #ef4444; color: white; }
+        .btn-warning { background-color: #f59e0b; color: white; }
+        .btn-sm { padding: 4px 8px; font-size: 11px; border-radius: 6px; }
+
+        /* PULSANTE WHATSAPP SPECIAL */
+        .btn-whatsapp {
+            background-color: #25D366;
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
+            border-radius: 8px;
+            padding: 10px 16px;
+        }
+        .btn-whatsapp:active { transform: scale(0.95); }
+
+        /* GRIGLIA CATEGORIE CON EMOJI */
+        .grid-select { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 12px; }
+        .grid-btn { 
+            padding: 10px 6px; 
+            background: #f8fafc; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 10px; 
+            text-align: center; 
+            font-size: 12px; 
+            font-weight: 600; 
+            color: #334155; 
+            cursor: pointer; 
+            transition: all 0.15s ease;
+        }
+        .grid-btn:active { transform: scale(0.95); }
+        .grid-btn.selected { background: #0284c7; color: white; border-color: #0284c7; box-shadow: 0 3px 8px rgba(2, 132, 199, 0.3); }
+
+        /* PRODOTTI LISTA CON CONTROLLI + / - */
+        .product-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
         .qty-controls { display: flex; align-items: center; gap: 8px; }
-        .qty-btn { width: 32px; height: 32px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; font-size: 16px; }
-        .qty-val { width: 30px; text-align: center; font-weight: bold; font-size: 14px; }
-        input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-bottom: 8px; }
+        .qty-btn { 
+            width: 34px; 
+            height: 34px; 
+            border-radius: 8px; 
+            border: 1px solid #cbd5e1; 
+            background: #ffffff; 
+            font-weight: 700; 
+            font-size: 16px; 
+            color: #0284c7;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.1s ease;
+        }
+        .qty-btn:active { transform: scale(0.88); background: #f0f9ff; }
+        .qty-val { width: 32px; text-align: center; font-weight: 700; font-size: 15px; color: #0f172a; }
+
+        input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; margin-bottom: 10px; background: #ffffff; transition: border-color 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: #0284c7; outline: none; }
         textarea { resize: vertical; min-height: 80px; font-family: monospace; }
-        .status-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #16a34a; color: white; }
         
+        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: rgba(22, 163, 74, 0.1); color: #16a34a; font-weight: 700; }
+        
+        /* TOTALE HEADER ANIMATO */
+        #header-tot { 
+            font-size: 13px; 
+            font-weight: 700;
+            background: #0284c7; 
+            color: white;
+            padding: 5px 10px; 
+            border-radius: 20px; 
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+            transition: transform 0.2s ease;
+        }
+        #header-tot.bounce { transform: scale(1.12); }
+
+        /* TABELLA CATALOGO */
         .catalog-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
-        .catalog-table th { background: #f1f5f9; text-align: left; padding: 6px 8px; color: #475569; font-weight: 600; border-bottom: 1px solid #cbd5e1; }
-        .catalog-table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .catalog-table th { background: #f8fafc; text-align: left; padding: 8px; color: #475569; font-weight: 600; border-bottom: 1px solid #cbd5e1; }
+        .catalog-table td { padding: 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
         .actions-cell { display: flex; gap: 4px; justify-content: flex-end; }
         
-        .collapsible-body { display: block; margin-top: 4px; }
+        .collapsible-body { display: block; margin-top: 4px; transition: all 0.2s ease; }
         .collapsible-body.collapsed { display: none; }
-        .arrow-icon { font-size: 12px; color: #0284c7; margin-left: 6px; transition: transform 0.2s; }
 
-        .cat-tag { display: inline-flex; align-items: center; justify-content: space-between; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px; font-size: 12px; margin: 2px; }
+        .cat-tag { display: inline-flex; align-items: center; justify-content: space-between; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin: 3px; font-weight: 500; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -57,7 +188,7 @@
             <h1>UZZO CHEF ordini</h1>
             <span class="status-badge">⚡ Attivo / Locale</span>
         </div>
-        <span id="header-tot" style="font-size: 12px; background: #0284c7; padding: 4px 8px; border-radius: 4px;">Tot: €0.00</span>
+        <span id="header-tot">Tot: €0.00</span>
     </header>
 
     <nav>
@@ -90,7 +221,7 @@
             <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h3 style="font-size: 15px; font-weight: 700;">Catalogo per Fornitore</h3>
-                    <span style="font-size: 11px; color: #64748b;">Tocca un fornitore per aprire/chiudere la tendina</span>
+                    <span style="font-size: 11px; color: #64748b;">Tocca un fornitore per apire/chiudere</span>
                 </div>
                 <button class="btn btn-success" onclick="exportToExcel()">📥 Scarica Excel</button>
             </div>
@@ -165,6 +296,18 @@
         let carrello = JSON.parse(localStorage.getItem('savino_carrello')) || {};
         let currentCat = categorie[0] || 'Pesce';
 
+        /* MAPPA EMOJI AUTOMATICA */
+        function getCatIcon(catName) {
+            let lower = catName.toLowerCase();
+            if (lower.includes('pesce') || lower.includes('mare')) return '🐟';
+            if (lower.includes('carne')) return '🥩';
+            if (lower.includes('orto') || lower.includes('frutta') || lower.includes('verdura')) return '🥦';
+            if (lower.includes('latticin') || lower.includes('formagg')) return '🧀';
+            if (lower.includes('bevand') || lower.includes('vino') || lower.includes('birra')) return '🍷';
+            if (lower.includes('secco') || lower.includes('scatol') || lower.includes('pasta')) return '🥫';
+            return '🛒';
+        }
+
         function parsePrice(val) {
             if (!val) return 0;
             let num = parseFloat(String(val).replace(',', '.'));
@@ -196,7 +339,10 @@
                 let p = prodotti.find(x => x.id === id);
                 if (p) tot += carrello[id] * p.prezzo;
             }
-            document.getElementById('header-tot').innerText = `Tot: €${tot.toFixed(2)}`;
+            let el = document.getElementById('header-tot');
+            el.innerText = `Tot: €${tot.toFixed(2)}`;
+            el.classList.add('bounce');
+            setTimeout(() => el.classList.remove('bounce'), 200);
         }
 
         function renderOrdini() {
@@ -209,7 +355,7 @@
             categorie.forEach(c => {
                 let btn = document.createElement('div');
                 btn.className = `grid-btn ${c === currentCat ? 'selected' : ''}`;
-                btn.innerText = c;
+                btn.innerText = `${getCatIcon(c)} ${c}`;
                 btn.onclick = () => { currentCat = c; renderOrdini(); };
                 catGrid.appendChild(btn);
             });
@@ -229,8 +375,8 @@
                 item.className = 'product-item';
                 item.innerHTML = `
                     <div>
-                        <strong style="font-size:14px;">${p.nome}</strong>
-                        <div style="font-size:11px; color:#64748b;">€${p.prezzo.toFixed(2)} / ${p.unita}</div>
+                        <strong style="font-size:14px; color:#0f172a;">${p.nome}</strong>
+                        <div style="font-size:12px; color:#64748b; font-weight:500;">€${p.prezzo.toFixed(2)} / ${p.unita}</div>
                     </div>
                     <div class="qty-controls">
                         <button class="qty-btn" onclick="updateQty('${p.id}', -1)">-</button>
@@ -276,19 +422,19 @@
 
                 let card = document.createElement('div');
                 card.className = 'card';
-                let html = `<div class="card-title">${fObj.nome}</div><ul style="margin-bottom:10px; font-size:13px; list-style:none;">`;
+                let html = `<div class="card-title">🚚 ${fObj.nome}</div><ul style="margin-bottom:12px; font-size:13px; list-style:none;">`;
 
                 items.forEach(i => {
                     let cost = i.qty * i.prod.prezzo;
                     subtot += cost;
-                    html += `<li style="padding:4px 0;">${i.prod.nome}: <strong>${i.qty} ${i.prod.unita}</strong> (€${cost.toFixed(2)})</li>`;
+                    html += `<li style="padding:5px 0; border-bottom:1px solid #f1f5f9;">${i.prod.nome}: <strong>${i.qty} ${i.prod.unita}</strong> (€${cost.toFixed(2)})</li>`;
                     textMsg += `• ${i.prod.nome}: ${i.qty} ${i.prod.unita}\n`;
                 });
 
                 textMsg += `\n*Totale: €${subtot.toFixed(2)}*`;
                 html += `</ul><div style="display:flex; justify-content:space-between; align-items:center;">
                             <strong>Totale: €${subtot.toFixed(2)}</strong>
-                            <button class="btn btn-success" onclick="window.open('https://wa.me/${fObj.tel}?text=${encodeURIComponent(textMsg)}', '_blank')">📱 WhatsApp</button>
+                            <button class="btn btn-whatsapp" onclick="window.open('https://wa.me/${fObj.tel}?text=${encodeURIComponent(textMsg)}', '_blank')">💬 WhatsApp</button>
                          </div>`;
                 card.innerHTML = html;
                 container.appendChild(card);
@@ -311,7 +457,7 @@
 
                 let html = `<div class="card-title-collapsible" onclick="toggleCollapsible('body-${f.id}', 'arrow-${f.id}')">
                                 <span>🚚 ${f.nome} <span style="font-size:11px; font-weight:normal; color:#64748b;">(${prodsFornitore.length} prodotti)</span></span>
-                                <span id="arrow-${f.id}" class="arrow-icon">▲</span>
+                                <span id="arrow-${f.id}" class="arrow-icon">▼</span>
                             </div>
                             <div id="body-${f.id}" class="collapsible-body">`;
 
@@ -332,11 +478,11 @@
                     prodsFornitore.forEach(p => {
                         html += `<tr>
                                     <td><strong>${p.nome}</strong></td>
-                                    <td>${p.cat}</td>
+                                    <td>${getCatIcon(p.cat)}</td>
                                     <td>${p.unita}</td>
                                     <td style="text-align:right; font-weight:bold; color:#0284c7;">€${p.prezzo.toFixed(2)}</td>
                                     <td class="actions-cell">
-                                        <button class="btn btn-warning btn-sm" onclick="editProdotto('${p.id}')">✏️</button>
+                                        <button class="btn btn-warning btn-sm" onclick="editProdotto('${p.id}')">✏️️</button>
                                         <button class="btn btn-danger btn-sm" onclick="deleteProdotto('${p.id}')">🗑️</button>
                                     </td>
                                  </tr>`;
@@ -355,10 +501,10 @@
             let arrow = document.getElementById(arrowId);
             if (body.classList.contains('collapsed')) {
                 body.classList.remove('collapsed');
-                arrow.innerText = '▲';
+                arrow.classList.remove('rotated');
             } else {
                 body.classList.add('collapsed');
-                arrow.innerText = '▼';
+                arrow.classList.add('rotated');
             }
         }
 
@@ -421,7 +567,6 @@
         }
 
         function renderGestione() {
-            // Aggiorna Select Fornitori
             let fSelect1 = document.getElementById('new-prod-fornitore');
             let fSelect2 = document.getElementById('bulk-prod-fornitore');
             fSelect1.innerHTML = '';
@@ -431,23 +576,21 @@
                 fSelect2.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
             });
 
-            // Aggiorna Select Categorie
             let cSelect1 = document.getElementById('new-prod-cat');
             let cSelect2 = document.getElementById('bulk-prod-cat');
             cSelect1.innerHTML = '';
             cSelect2.innerHTML = '';
             categorie.forEach(c => {
-                cSelect1.innerHTML += `<option value="${c}">${c}</option>`;
-                cSelect2.innerHTML += `<option value="${c}">${c}</option>`;
+                cSelect1.innerHTML += `<option value="${c}">${getCatIcon(c)} ${c}</option>`;
+                cSelect2.innerHTML += `<option value="${c}">${getCatIcon(c)} ${c}</option>`;
             });
 
-            // Rendering Lista Categorie con tasto Elimina
             let catContainer = document.getElementById('categories-list-container');
             catContainer.innerHTML = '';
             categorie.forEach((c, idx) => {
                 let tag = document.createElement('div');
                 tag.className = 'cat-tag';
-                tag.innerHTML = `<span>${c}</span> <button class="btn btn-danger btn-sm" style="margin-left:6px; padding:2px 5px;" onclick="deleteCategoria(${idx})">✕</button>`;
+                tag.innerHTML = `<span>${getCatIcon(c)} ${c}</span> <button class="btn btn-danger btn-sm" style="margin-left:6px; padding:2px 5px;" onclick="deleteCategoria(${idx})">✕</button>`;
                 catContainer.appendChild(tag);
             });
         }
