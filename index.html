@@ -28,7 +28,8 @@
         .qty-controls { display: flex; align-items: center; gap: 8px; }
         .qty-btn { width: 32px; height: 32px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; font-size: 16px; }
         .qty-val { width: 30px; text-align: center; font-weight: bold; font-size: 14px; }
-        input, select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-bottom: 8px; }
+        input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-bottom: 8px; }
+        textarea { resize: vertical; min-height: 80px; font-family: monospace; }
         .status-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #16a34a; color: white; }
         
         .catalog-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
@@ -86,15 +87,32 @@
 
         <!-- TAB GESTIONE -->
         <div id="tab-gestione" class="tab-content">
-            <div class="card">
-                <div class="card-title">Aggiungi Fornitore</div>
-                <input type="text" id="new-fornitore-nome" placeholder="Nome Fornitore">
-                <input type="text" id="new-fornitore-tel" placeholder="Numero WhatsApp">
-                <button class="btn btn-primary" onclick="addFornitore()">+ Aggiungi Fornitore</button>
+            
+            <!-- INCOLLA MULTI-RIGA / BLOCCO -->
+            <div class="card" style="border: 2px solid #0284c7;">
+                <div class="card-title" style="color: #0284c7;">⚡ Importa Prodotti in Blocco (Incolla Testo)</div>
+                <label style="font-size: 11px; color: #64748b;">Fornitore di Destinazione:</label>
+                <select id="bulk-prod-fornitore"></select>
+                
+                <label style="font-size: 11px; color: #64748b;">Categoria:</label>
+                <select id="bulk-prod-cat">
+                    <option value="Pesce">Pesce</option>
+                    <option value="Carne">Carne</option>
+                    <option value="Ortofrutta">Ortofrutta</option>
+                    <option value="Secco/Scatolame">Secco/Scatolame</option>
+                    <option value="Latticini">Latticini</option>
+                    <option value="Bevande">Bevande</option>
+                    <option value="Altro">Altro</option>
+                </select>
+
+                <textarea id="bulk-text-input" placeholder="Incolla qui le righe del listino, es:&#10;Sarde Fresche kg 8.50&#10;Gambero Rosso kg 35,00&#10;Pomodoro Ciliegino 2.20"></textarea>
+                
+                <button class="btn btn-primary" style="width: 100%;" onclick="addBulkProducts()">+ Aggiungi Tutti i Prodotti in Blocco</button>
             </div>
 
+            <!-- AGGIUNTA MANUALE SINGOLA -->
             <div class="card">
-                <div class="card-title">Aggiungi Prodotto</div>
+                <div class="card-title">+ Aggiungi Prodotto Singolo</div>
                 <input type="text" id="new-prod-nome" placeholder="Nome Prodotto">
                 <select id="new-prod-cat">
                     <option value="Pesce">Pesce</option>
@@ -109,6 +127,14 @@
                 <input type="text" id="new-prod-unita" placeholder="Unità (es. kg, cassa)">
                 <input type="text" id="new-prod-prezzo" placeholder="Prezzo (€)">
                 <button class="btn btn-primary" onclick="addProdotto()">+ Aggiungi Prodotto</button>
+            </div>
+
+            <!-- FORNITORI -->
+            <div class="card">
+                <div class="card-title">Aggiungi Nuovo Fornitore</div>
+                <input type="text" id="new-fornitore-nome" placeholder="Nome Fornitore">
+                <input type="text" id="new-fornitore-tel" placeholder="Numero WhatsApp">
+                <button class="btn btn-primary" onclick="addFornitore()">+ Aggiungi Fornitore</button>
             </div>
         </div>
     </div>
@@ -328,10 +354,14 @@
         }
 
         function renderGestione() {
-            let fSelect = document.getElementById('new-prod-fornitore');
-            fSelect.innerHTML = '';
+            let fSelect1 = document.getElementById('new-prod-fornitore');
+            let fSelect2 = document.getElementById('bulk-prod-fornitore');
+            
+            fSelect1.innerHTML = '';
+            fSelect2.innerHTML = '';
             fornitori.forEach(f => {
-                fSelect.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
+                fSelect1.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
+                fSelect2.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
             });
         }
 
@@ -360,6 +390,76 @@
             document.getElementById('new-prod-prezzo').value = '';
             renderOrdini();
             alert('Prodotto aggiunto!');
+        }
+
+        /* FUNZIONE PER AGGIUNGERE IN BLOCCO DA TESTO INCOLLATO */
+        function addBulkProducts() {
+            let text = document.getElementById('bulk-text-input').value.trim();
+            let fornitoreId = document.getElementById('bulk-prod-fornitore').value;
+            let cat = document.getElementById('bulk-prod-cat').value;
+
+            if (!text) {
+                alert('Incolla almeno una riga di testo.');
+                return;
+            }
+
+            let lines = text.split('\n');
+            let addedCount = 0;
+
+            lines.forEach(line => {
+                let trimmed = line.trim();
+                if (!trimmed) return;
+
+                // Estrae numeri/prezzo dalla riga
+                let priceMatch = trimmed.match(/(\d+[.,]?\d*)\s*(€|euro)?$/i) || trimmed.match(/(\d+[.,]\d+)/);
+                let price = 0;
+                let name = trimmed;
+                let unita = 'kg';
+
+                if (priceMatch) {
+                    price = parsePrice(priceMatch[1]);
+                    name = trimmed.replace(priceMatch[0], '').trim();
+                }
+
+                // Cerca unita di misura comuni nel testo
+                if (/\b(kg|chili|chilogrammi)\b/i.test(name)) {
+                    unita = 'kg';
+                    name = name.replace(/\b(kg|chili|chilogrammi)\b/gi, '').trim();
+                } else if (/\b(gr|grammi)\b/i.test(name)) {
+                    unita = 'gr';
+                    name = name.replace(/\b(gr|grammi)\b/gi, '').trim();
+                } else if (/\b(lt|litri)\b/i.test(name)) {
+                    unita = 'lt';
+                    name = name.replace(/\b(lt|litri)\b/gi, '').trim();
+                } else if (/\b(pz|pezzi|cassa|bottiglia|btt)\b/i.test(name)) {
+                    unita = 'pz';
+                    name = name.replace(/\b(pz|pezzi|cassa|bottiglia|btt)\b/gi, '').trim();
+                }
+
+                // Pulisce eventuali caratteri rimasti a fine riga
+                name = name.replace(/[-:,]+$/, '').trim();
+
+                if (name) {
+                    prodotti.push({
+                        id: 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                        nome: name,
+                        cat: cat,
+                        fornitoreId: fornitoreId,
+                        unita: unita,
+                        prezzo: price
+                    });
+                    addedCount++;
+                }
+            });
+
+            if (addedCount > 0) {
+                saveData();
+                document.getElementById('bulk-text-input').value = '';
+                alert(`Aggiunti con successo ${addedCount} prodotti!`);
+                renderOrdini();
+            } else {
+                alert('Nessun prodotto valido trovato nel testo.');
+            }
         }
 
         saveData();
