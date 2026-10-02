@@ -45,6 +45,8 @@
         .collapsible-body { display: block; margin-top: 4px; }
         .collapsible-body.collapsed { display: none; }
         .arrow-icon { font-size: 12px; color: #0284c7; margin-left: 6px; transition: transform 0.2s; }
+
+        .cat-tag { display: inline-flex; align-items: center; justify-content: space-between; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px; font-size: 12px; margin: 2px; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -98,6 +100,16 @@
         <!-- TAB GESTIONE -->
         <div id="tab-gestione" class="tab-content">
             
+            <!-- GESTIONE CATEGORIE -->
+            <div class="card">
+                <div class="card-title">🏷️ Gestisci Categorie</div>
+                <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                    <input type="text" id="new-cat-nome" placeholder="Nuova Categoria" style="margin-bottom:0;">
+                    <button class="btn btn-primary" onclick="addCategoria()">+ Aggiungi</button>
+                </div>
+                <div id="categories-list-container" style="margin-top: 8px;"></div>
+            </div>
+
             <!-- INCOLLA MULTI-RIGA / BLOCCO -->
             <div class="card" style="border: 2px solid #0284c7;">
                 <div class="card-title" style="color: #0284c7;">⚡ Importa Prodotti in Blocco (Incolla Testo)</div>
@@ -105,15 +117,7 @@
                 <select id="bulk-prod-fornitore"></select>
                 
                 <label style="font-size: 11px; color: #64748b;">Categoria:</label>
-                <select id="bulk-prod-cat">
-                    <option value="Pesce">Pesce</option>
-                    <option value="Carne">Carne</option>
-                    <option value="Ortofrutta">Ortofrutta</option>
-                    <option value="Secco/Scatolame">Secco/Scatolame</option>
-                    <option value="Latticini">Latticini</option>
-                    <option value="Bevande">Bevande</option>
-                    <option value="Altro">Altro</option>
-                </select>
+                <select id="bulk-prod-cat"></select>
 
                 <textarea id="bulk-text-input" placeholder="Incolla qui le righe del listino, es:&#10;Sarde Fresche kg 8.50&#10;Gambero Rosso kg 35,00&#10;Pomodoro Ciliegino 2.20"></textarea>
                 
@@ -124,15 +128,7 @@
             <div class="card">
                 <div class="card-title">+ Aggiungi Prodotto Singolo</div>
                 <input type="text" id="new-prod-nome" placeholder="Nome Prodotto">
-                <select id="new-prod-cat">
-                    <option value="Pesce">Pesce</option>
-                    <option value="Carne">Carne</option>
-                    <option value="Ortofrutta">Ortofrutta</option>
-                    <option value="Secco/Scatolame">Secco/Scatolame</option>
-                    <option value="Latticini">Latticini</option>
-                    <option value="Bevande">Bevande</option>
-                    <option value="Altro">Altro</option>
-                </select>
+                <select id="new-prod-cat"></select>
                 <select id="new-prod-fornitore"></select>
                 <input type="text" id="new-prod-unita" placeholder="Unità (es. kg, cassa)">
                 <input type="text" id="new-prod-prezzo" placeholder="Prezzo (€)">
@@ -150,6 +146,8 @@
     </div>
 
     <script>
+        let defaultCategorie = ['Pesce', 'Carne', 'Ortofrutta', 'Secco/Scatolame', 'Latticini', 'Bevande', 'Altro'];
+
         let defaultFornitori = [
             { id: 'f1', nome: 'Ortofrutta Locale', tel: '+39330000001' },
             { id: 'f2', nome: 'Pescheria del Porto', tel: '+39330000002' }
@@ -161,10 +159,11 @@
             { id: 'p3', nome: 'Pomodoro Ciliegino', cat: 'Ortofrutta', fornitoreId: 'f1', unita: 'kg', prezzo: 2.2 }
         ];
 
+        let categorie = JSON.parse(localStorage.getItem('savino_categorie')) || defaultCategorie;
         let fornitori = JSON.parse(localStorage.getItem('savino_fornitori')) || defaultFornitori;
         let prodotti = JSON.parse(localStorage.getItem('savino_prodotti')) || defaultProdotti;
         let carrello = JSON.parse(localStorage.getItem('savino_carrello')) || {};
-        let currentCat = 'Pesce';
+        let currentCat = categorie[0] || 'Pesce';
 
         function parsePrice(val) {
             if (!val) return 0;
@@ -173,6 +172,7 @@
         }
 
         function saveData() {
+            localStorage.setItem('savino_categorie', JSON.stringify(categorie));
             localStorage.setItem('savino_fornitori', JSON.stringify(fornitori));
             localStorage.setItem('savino_prodotti', JSON.stringify(prodotti));
             localStorage.setItem('savino_carrello', JSON.stringify(carrello));
@@ -200,7 +200,10 @@
         }
 
         function renderOrdini() {
-            let categorie = ['Pesce', 'Carne', 'Ortofrutta', 'Secco/Scatolame', 'Latticini', 'Bevande', 'Altro'];
+            if (!categorie.includes(currentCat)) {
+                currentCat = categorie[0] || 'Altro';
+            }
+
             let catGrid = document.getElementById('cat-grid');
             catGrid.innerHTML = '';
             categorie.forEach(c => {
@@ -216,7 +219,7 @@
             let filtered = prodotti.filter(p => p.cat === currentCat);
 
             if (filtered.length === 0) {
-                prodList.innerHTML = '<p style="font-size:13px; color:#64748b; padding:10px 0;">Nessun prodotto presente.</p>';
+                prodList.innerHTML = '<p style="font-size:13px; color:#64748b; padding:10px 0;">Nessun prodotto presente in questa categoria.</p>';
                 return;
             }
 
@@ -418,15 +421,63 @@
         }
 
         function renderGestione() {
+            // Aggiorna Select Fornitori
             let fSelect1 = document.getElementById('new-prod-fornitore');
             let fSelect2 = document.getElementById('bulk-prod-fornitore');
-            
             fSelect1.innerHTML = '';
             fSelect2.innerHTML = '';
             fornitori.forEach(f => {
                 fSelect1.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
                 fSelect2.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
             });
+
+            // Aggiorna Select Categorie
+            let cSelect1 = document.getElementById('new-prod-cat');
+            let cSelect2 = document.getElementById('bulk-prod-cat');
+            cSelect1.innerHTML = '';
+            cSelect2.innerHTML = '';
+            categorie.forEach(c => {
+                cSelect1.innerHTML += `<option value="${c}">${c}</option>`;
+                cSelect2.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+
+            // Rendering Lista Categorie con tasto Elimina
+            let catContainer = document.getElementById('categories-list-container');
+            catContainer.innerHTML = '';
+            categorie.forEach((c, idx) => {
+                let tag = document.createElement('div');
+                tag.className = 'cat-tag';
+                tag.innerHTML = `<span>${c}</span> <button class="btn btn-danger btn-sm" style="margin-left:6px; padding:2px 5px;" onclick="deleteCategoria(${idx})">✕</button>`;
+                catContainer.appendChild(tag);
+            });
+        }
+
+        function addCategoria() {
+            let val = document.getElementById('new-cat-nome').value.trim();
+            if (!val) return alert("Inserisci il nome della categoria");
+            if (categorie.includes(val)) return alert("Categoria già esistente");
+            
+            categorie.push(val);
+            saveData();
+            document.getElementById('new-cat-nome').value = '';
+            renderGestione();
+            renderOrdini();
+        }
+
+        function deleteCategoria(idx) {
+            if (categorie.length <= 1) {
+                return alert("Devi mantenere almeno una categoria.");
+            }
+            let catName = categorie[idx];
+            if (confirm(`Eliminare la categoria "${catName}"?`)) {
+                categorie.splice(idx, 1);
+                if (currentCat === catName) {
+                    currentCat = categorie[0];
+                }
+                saveData();
+                renderGestione();
+                renderOrdini();
+            }
         }
 
         function addFornitore() {
