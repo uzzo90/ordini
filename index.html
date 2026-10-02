@@ -17,6 +17,10 @@
         .tab-content.active { display: block; }
         .card { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 12px; margin-bottom: 12px; }
         .card-title { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Titolo della card cliccabile per tendina */
+        .card-title-collapsible { font-size: 14px; font-weight: 700; color: #1e293b; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        
         .btn { padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; }
         .btn-primary { background-color: #0284c7; color: white; }
         .btn-success { background-color: #16a34a; color: white; }
@@ -34,10 +38,16 @@
         textarea { resize: vertical; min-height: 80px; font-family: monospace; }
         .status-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #16a34a; color: white; }
         
-        .catalog-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+        /* Tabella Indice Catalogo */
+        .catalog-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
         .catalog-table th { background: #f1f5f9; text-align: left; padding: 6px 8px; color: #475569; font-weight: 600; border-bottom: 1px solid #cbd5e1; }
         .catalog-table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
         .actions-cell { display: flex; gap: 4px; justify-content: flex-end; }
+        
+        /* Contenitore a tendina */
+        .collapsible-body { display: block; margin-top: 4px; }
+        .collapsible-body.collapsed { display: none; }
+        .arrow-icon { font-size: 12px; color: #0284c7; margin-left: 6px; transition: transform 0.2s; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -76,12 +86,12 @@
             <div id="summary-fornitori">Nessun prodotto selezionato.</div>
         </div>
 
-        <!-- TAB INDICE CATALOGO (MODIFICA ED ELIMINA) -->
+        <!-- TAB INDICE CATALOGO (CON TENDINE COMPRIMIBILI) -->
         <div id="tab-indice" class="tab-content">
             <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h3 style="font-size: 15px; font-weight: 700;">Catalogo per Fornitore</h3>
-                    <span style="font-size: 11px; color: #64748b;">Modifica o elimina ingredienti e prezzi</span>
+                    <span style="font-size: 11px; color: #64748b;">Tocca un fornitore per aprire/chiudere la tendina</span>
                 </div>
                 <button class="btn btn-success" onclick="exportToExcel()">📥 Scarica Excel</button>
             </div>
@@ -285,7 +295,7 @@
             }
         }
 
-        /* TABELLA INDICE CON TASTI MODIFICA ED ELIMINA */
+        /* RENDERING INDICE CATALOGO CON SCHEDE A TENDINA */
         function renderIndice() {
             let container = document.getElementById('indice-container');
             container.innerHTML = '';
@@ -300,13 +310,14 @@
                 let card = document.createElement('div');
                 card.className = 'card';
 
-                let html = `<div class="card-title">
-                                <span>🚚 ${f.nome}</span>
-                                <span style="font-size:11px; font-weight:normal; color:#64748b;">${prodsFornitore.length} prodotti</span>
-                            </div>`;
+                let html = `<div class="card-title-collapsible" onclick="toggleCollapsible('body-${f.id}', 'arrow-${f.id}')">
+                                <span>🚚 ${f.nome} <span style="font-size:11px; font-weight:normal; color:#64748b;">(${prodsFornitore.length} prodotti)</span></span>
+                                <span id="arrow-${f.id}" class="arrow-icon">▲</span>
+                            </div>
+                            <div id="body-${f.id}" class="collapsible-body">`;
 
                 if (prodsFornitore.length === 0) {
-                    html += `<p style="font-size:12px; color:#94a3b8; font-style:italic;">Nessun prodotto associato.</p>`;
+                    html += `<p style="font-size:12px; color:#94a3b8; font-style:italic; padding-top:6px;">Nessun prodotto associato.</p>`;
                 } else {
                     html += `<table class="catalog-table">
                                 <thead>
@@ -334,12 +345,25 @@
                     html += `</tbody></table>`;
                 }
 
+                html += `</div>`;
                 card.innerHTML = html;
                 container.appendChild(card);
             });
         }
 
-        /* MODIFICA SINGOLO PRODOTTO */
+        /* FUNZIONE PER APRIRE/CHIUDERE LA TENDINA */
+        function toggleCollapsible(bodyId, arrowId) {
+            let body = document.getElementById(bodyId);
+            let arrow = document.getElementById(arrowId);
+            if (body.classList.contains('collapsed')) {
+                body.classList.remove('collapsed');
+                arrow.innerText = '▲';
+            } else {
+                body.classList.add('collapsed');
+                arrow.innerText = '▼';
+            }
+        }
+
         function editProdotto(prodId) {
             let p = prodotti.find(x => x.id === prodId);
             if (!p) return;
@@ -362,7 +386,6 @@
             renderOrdini();
         }
 
-        /* CANCELLA SINGOLO PRODOTTO */
         function deleteProdotto(prodId) {
             let p = prodotti.find(x => x.id === prodId);
             if (!p) return;
