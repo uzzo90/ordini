@@ -9,14 +9,14 @@
         body { background-color: #f8fafc; color: #0f172a; display: flex; flex-direction: column; height: 100vh; }
         header { background-color: #1e293b; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
         header h1 { font-size: 16px; font-weight: 700; }
-        nav { display: flex; background: #0f172a; border-bottom: 1px solid #334155; }
-        .nav-btn { flex: 1; padding: 12px 4px; text-align: center; color: #94a3b8; background: none; border: none; font-size: 11px; font-weight: 600; cursor: pointer; }
+        nav { display: flex; background: #0f172a; border-bottom: 1px solid #334155; overflow-x: auto; }
+        .nav-btn { flex: 1; min-width: 65px; padding: 12px 4px; text-align: center; color: #94a3b8; background: none; border: none; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
         .nav-btn.active { color: #38bdf8; border-bottom: 3px solid #38bdf8; background-color: rgba(255,255,255,0.05); }
         .main-content { flex: 1; overflow-y: auto; padding: 12px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .card { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 12px; margin-bottom: 12px; }
-        .card-title { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+        .card-title { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .btn { padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; }
         .btn-primary { background-color: #0284c7; color: white; }
         .btn-success { background-color: #16a34a; color: white; }
@@ -30,7 +30,14 @@
         .qty-val { width: 30px; text-align: center; font-weight: bold; font-size: 14px; }
         input, select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-bottom: 8px; }
         .status-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #16a34a; color: white; }
+        
+        /* Tabella Indice Catalogo */
+        .catalog-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+        .catalog-table th { background: #f1f5f9; text-align: left; padding: 6px 8px; color: #475569; font-weight: 600; border-bottom: 1px solid #cbd5e1; }
+        .catalog-table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; }
     </style>
+    <!-- Libreria scaricamento Excel XLSX -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -45,10 +52,12 @@
     <nav>
         <button class="nav-btn active" onclick="switchTab('tab-ordini', event)">🛒 Ordina</button>
         <button class="nav-btn" onclick="switchTab('tab-fornitori', event)">📱 Invia</button>
+        <button class="nav-btn" onclick="switchTab('tab-indice', event)">📋 Indice</button>
         <button class="nav-btn" onclick="switchTab('tab-gestione', event)">⚙️ Gestisci</button>
     </nav>
 
     <div class="main-content">
+        <!-- TAB ORDINI -->
         <div id="tab-ordini" class="tab-content active">
             <div class="card">
                 <div class="card-title">Categorie</div>
@@ -60,10 +69,24 @@
             </div>
         </div>
 
+        <!-- TAB INVIA -->
         <div id="tab-fornitori" class="tab-content">
             <div id="summary-fornitori">Nessun prodotto selezionato.</div>
         </div>
 
+        <!-- TAB INDICE CATALOGO -->
+        <div id="tab-indice" class="tab-content">
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="font-size: 15px; font-weight: 700;">Catalogo per Fornitore</h3>
+                    <span style="font-size: 11px; color: #64748b;">Elenco completo listini e prezzi</span>
+                </div>
+                <button class="btn btn-success" onclick="exportToExcel()">📥 Scarica Excel</button>
+            </div>
+            <div id="indice-container"></div>
+        </div>
+
+        <!-- TAB GESTIONE -->
         <div id="tab-gestione" class="tab-content">
             <div class="card">
                 <div class="card-title">Aggiungi Fornitore</div>
@@ -133,6 +156,7 @@
             if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
             if (tabId === 'tab-ordini') renderOrdini();
             if (tabId === 'tab-fornitori') renderInvio();
+            if (tabId === 'tab-indice') renderIndice();
             if (tabId === 'tab-gestione') renderGestione();
         }
 
@@ -236,6 +260,79 @@
                 card.innerHTML = html;
                 container.appendChild(card);
             }
+        }
+
+        /* MOSTRA L'INDICE PRODOTTI PER FORNITORE */
+        function renderIndice() {
+            let container = document.getElementById('indice-container');
+            container.innerHTML = '';
+
+            if (fornitori.length === 0) {
+                container.innerHTML = '<p style="font-size:13px; color:#64748b;">Nessun fornitore registrato.</p>';
+                return;
+            }
+
+            fornitori.forEach(f => {
+                let prodsFornitore = prodotti.filter(p => p.fornitoreId === f.id);
+                let card = document.createElement('div');
+                card.className = 'card';
+
+                let html = `<div class="card-title">
+                                <span>🚚 ${f.nome}</span>
+                                <span style="font-size:11px; font-weight:normal; color:#64748b;">${prodsFornitore.length} prodotti</span>
+                            </div>`;
+
+                if (prodsFornitore.length === 0) {
+                    html += `<p style="font-size:12px; color:#94a3b8; font-style:italic;">Nessun prodotto associato.</p>`;
+                } else {
+                    html += `<table class="catalog-table">
+                                <thead>
+                                    <tr>
+                                        <th>Prodotto</th>
+                                        <th>Categoria</th>
+                                        <th>Unità</th>
+                                        <th style="text-align:right;">Prezzo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                    prodsFornitore.forEach(p => {
+                        html += `<tr>
+                                    <td><strong>${p.nome}</strong></td>
+                                    <td>${p.cat}</td>
+                                    <td>${p.unita}</td>
+                                    <td style="text-align:right; font-weight:bold; color:#0284c7;">€${p.prezzo.toFixed(2)}</td>
+                                 </tr>`;
+                    });
+                    html += `</tbody></table>`;
+                }
+
+                card.innerHTML = html;
+                container.appendChild(card);
+            });
+        }
+
+        /* ESPORTAZIONE IN FOGLIO EXCEL (XLSX) */
+        function exportToExcel() {
+            if (prodotti.length === 0) {
+                alert("Nessun prodotto da esportare.");
+                return;
+            }
+
+            let exportData = prodotti.map(p => {
+                let fObj = fornitori.find(f => f.id === p.fornitoreId);
+                return {
+                    'Fornitore': fObj ? fObj.nome : 'Non specificato',
+                    'Prodotto': p.nome,
+                    'Categoria': p.cat,
+                    'Unità di Misura': p.unita,
+                    'Prezzo (€)': p.prezzo
+                };
+            });
+
+            let worksheet = XLSX.utils.json_to_sheet(exportData);
+            let workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Catalogo Savino");
+            XLSX.writeFile(workbook, "Catalogo_Fornitori_Savino.xlsx");
         }
 
         function renderGestione() {
