@@ -21,6 +21,8 @@
         .btn-primary { background-color: #0284c7; color: white; }
         .btn-success { background-color: #16a34a; color: white; }
         .btn-danger { background-color: #dc2626; color: white; }
+        .btn-warning { background-color: #d97706; color: white; }
+        .btn-sm { padding: 4px 8px; font-size: 11px; }
         .grid-select { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; margin-bottom: 12px; }
         .grid-btn { padding: 8px 4px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; font-size: 12px; font-weight: 600; cursor: pointer; }
         .grid-btn.selected { background: #0284c7; color: white; border-color: #0284c7; }
@@ -34,7 +36,8 @@
         
         .catalog-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
         .catalog-table th { background: #f1f5f9; text-align: left; padding: 6px 8px; color: #475569; font-weight: 600; border-bottom: 1px solid #cbd5e1; }
-        .catalog-table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; }
+        .catalog-table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .actions-cell { display: flex; gap: 4px; justify-content: flex-end; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -73,12 +76,12 @@
             <div id="summary-fornitori">Nessun prodotto selezionato.</div>
         </div>
 
-        <!-- TAB INDICE CATALOGO -->
+        <!-- TAB INDICE CATALOGO (MODIFICA ED ELIMINA) -->
         <div id="tab-indice" class="tab-content">
             <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h3 style="font-size: 15px; font-weight: 700;">Catalogo per Fornitore</h3>
-                    <span style="font-size: 11px; color: #64748b;">Elenco completo listini e prezzi</span>
+                    <span style="font-size: 11px; color: #64748b;">Modifica o elimina ingredienti e prezzi</span>
                 </div>
                 <button class="btn btn-success" onclick="exportToExcel()">📥 Scarica Excel</button>
             </div>
@@ -282,6 +285,7 @@
             }
         }
 
+        /* TABELLA INDICE CON TASTI MODIFICA ED ELIMINA */
         function renderIndice() {
             let container = document.getElementById('indice-container');
             container.innerHTML = '';
@@ -308,9 +312,10 @@
                                 <thead>
                                     <tr>
                                         <th>Prodotto</th>
-                                        <th>Categoria</th>
+                                        <th>Cat.</th>
                                         <th>Unità</th>
                                         <th style="text-align:right;">Prezzo</th>
+                                        <th style="text-align:right;">Azioni</th>
                                     </tr>
                                 </thead>
                                 <tbody>`;
@@ -320,6 +325,10 @@
                                     <td>${p.cat}</td>
                                     <td>${p.unita}</td>
                                     <td style="text-align:right; font-weight:bold; color:#0284c7;">€${p.prezzo.toFixed(2)}</td>
+                                    <td class="actions-cell">
+                                        <button class="btn btn-warning btn-sm" onclick="editProdotto('${p.id}')">✏️</button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteProdotto('${p.id}')">🗑️</button>
+                                    </td>
                                  </tr>`;
                     });
                     html += `</tbody></table>`;
@@ -328,6 +337,43 @@
                 card.innerHTML = html;
                 container.appendChild(card);
             });
+        }
+
+        /* MODIFICA SINGOLO PRODOTTO */
+        function editProdotto(prodId) {
+            let p = prodotti.find(x => x.id === prodId);
+            if (!p) return;
+
+            let nuovoNome = prompt("Nome del prodotto:", p.nome);
+            if (nuovoNome === null) return;
+
+            let nuovoPrezzo = prompt("Prezzo (€):", p.prezzo);
+            if (nuovoPrezzo === null) return;
+
+            let nuovaUnita = prompt("Unità di misura (es. kg, pz, cassa):", p.unita);
+            if (nuovaUnita === null) return;
+
+            p.nome = nuovoNome.trim() || p.nome;
+            p.prezzo = parsePrice(nuovoPrezzo);
+            p.unita = nuovaUnita.trim() || p.unita;
+
+            saveData();
+            renderIndice();
+            renderOrdini();
+        }
+
+        /* CANCELLA SINGOLO PRODOTTO */
+        function deleteProdotto(prodId) {
+            let p = prodotti.find(x => x.id === prodId);
+            if (!p) return;
+
+            if (confirm(`Vuoi cancellare definitivamente "${p.nome}" dal catalogo?`)) {
+                prodotti = prodotti.filter(x => x.id !== prodId);
+                delete carrello[prodId];
+                saveData();
+                renderIndice();
+                renderOrdini();
+            }
         }
 
         function exportToExcel() {
@@ -392,7 +438,6 @@
             alert('Prodotto aggiunto!');
         }
 
-        /* FUNZIONE PER AGGIUNGERE IN BLOCCO DA TESTO INCOLLATO */
         function addBulkProducts() {
             let text = document.getElementById('bulk-text-input').value.trim();
             let fornitoreId = document.getElementById('bulk-prod-fornitore').value;
@@ -410,7 +455,6 @@
                 let trimmed = line.trim();
                 if (!trimmed) return;
 
-                // Estrae numeri/prezzo dalla riga
                 let priceMatch = trimmed.match(/(\d+[.,]?\d*)\s*(€|euro)?$/i) || trimmed.match(/(\d+[.,]\d+)/);
                 let price = 0;
                 let name = trimmed;
@@ -421,7 +465,6 @@
                     name = trimmed.replace(priceMatch[0], '').trim();
                 }
 
-                // Cerca unita di misura comuni nel testo
                 if (/\b(kg|chili|chilogrammi)\b/i.test(name)) {
                     unita = 'kg';
                     name = name.replace(/\b(kg|chili|chilogrammi)\b/gi, '').trim();
@@ -436,7 +479,6 @@
                     name = name.replace(/\b(pz|pezzi|cassa|bottiglia|btt)\b/gi, '').trim();
                 }
 
-                // Pulisce eventuali caratteri rimasti a fine riga
                 name = name.replace(/[-:,]+$/, '').trim();
 
                 if (name) {
