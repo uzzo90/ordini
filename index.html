@@ -31,12 +31,10 @@
         input, select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-bottom: 8px; }
         .status-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #16a34a; color: white; }
         
-        /* Tabella Indice Catalogo */
         .catalog-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
         .catalog-table th { background: #f1f5f9; text-align: left; padding: 6px 8px; color: #475569; font-weight: 600; border-bottom: 1px solid #cbd5e1; }
         .catalog-table td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; }
     </style>
-    <!-- Libreria scaricamento Excel XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -111,10 +109,6 @@
                 <input type="text" id="new-prod-unita" placeholder="Unità (es. kg, cassa)">
                 <input type="text" id="new-prod-prezzo" placeholder="Prezzo (€)">
                 <button class="btn btn-primary" onclick="addProdotto()">+ Aggiungi Prodotto</button>
-            </div>
-
-            <div class="card" style="text-align:center;">
-                <button class="btn btn-danger" onclick="resetLocale()">⚠ Ripristina Memoria App</button>
             </div>
         </div>
     </div>
@@ -262,7 +256,6 @@
             }
         }
 
-        /* MOSTRA L'INDICE PRODOTTI PER FORNITORE */
         function renderIndice() {
             let container = document.getElementById('indice-container');
             container.innerHTML = '';
@@ -311,7 +304,6 @@
             });
         }
 
-        /* ESPORTAZIONE IN FOGLIO EXCEL (XLSX) */
         function exportToExcel() {
             if (prodotti.length === 0) {
                 alert("Nessun prodotto da esportare.");
@@ -368,13 +360,6 @@
             document.getElementById('new-prod-prezzo').value = '';
             renderOrdini();
             alert('Prodotto aggiunto!');
-        }
-
-        function resetLocale() {
-            if (confirm("Ripristinare l'app allo stato iniziale?")) {
-                localStorage.clear();
-                location.reload();
-            }
         }
 
         saveData();
