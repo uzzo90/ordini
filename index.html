@@ -178,6 +178,12 @@
         .collapsible-body.collapsed { display: none; }
 
         .cat-tag { display: inline-flex; align-items: center; justify-content: space-between; background: #e5e7eb; border: 1px solid #d1d5db; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin: 3px; font-weight: 500; }
+
+        /* LISTA FORNITORI IN GESTIONE */
+        .supplier-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 6px; }
+        .supplier-info { font-size: 13px; }
+        .supplier-info strong { display: block; color: #1f2937; }
+        .supplier-info span { font-size: 11px; color: #6b7280; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -287,10 +293,13 @@
 
             <!-- FORNITORI -->
             <div class="card">
-                <div class="card-title">Aggiungi Nuovo Fornitore</div>
+                <div class="card-title">🚚 Gestisci Fornitori</div>
                 <input type="text" id="new-fornitore-nome" placeholder="Nome Fornitore">
-                <input type="text" id="new-fornitore-tel" placeholder="Numero WhatsApp">
-                <button class="btn btn-primary" onclick="addFornitore()">+ Aggiungi Fornitore</button>
+                <input type="text" id="new-fornitore-tel" placeholder="Numero WhatsApp (es. +39330000000)">
+                <button class="btn btn-primary" style="width: 100%; margin-bottom: 12px;" onclick="addFornitore()">+ Aggiungi Fornitore</button>
+                
+                <div style="font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 8px;">Fornitori Registrati:</div>
+                <div id="fornitori-list-container"></div>
             </div>
         </div>
     </div>
@@ -352,7 +361,6 @@
             for (let catName in keywordsMap) {
                 let match = keywordsMap[catName].some(kw => lowerText.includes(kw));
                 if (match) {
-                    // Verifica se questa categoria esiste nell'app dell'utente
                     let existingCat = categorieObj.find(c => c.nome.toLowerCase().includes(catName.toLowerCase()) || catName.toLowerCase().includes(c.nome.toLowerCase()));
                     if (existingCat) return existingCat.nome;
                 }
@@ -652,6 +660,28 @@
                 tag.innerHTML = `<span>${c.icon} ${c.nome}</span> <button class="btn btn-danger btn-sm" style="margin-left:6px; padding:2px 5px;" onclick="deleteCategoria(${idx})">✕</button>`;
                 catContainer.appendChild(tag);
             });
+
+            /* RENDERING ELENCO FORNITORI CON CANCELLAZIONE */
+            let fornitoriContainer = document.getElementById('fornitori-list-container');
+            fornitoriContainer.innerHTML = '';
+            if (fornitori.length === 0) {
+                fornitoriContainer.innerHTML = '<p style="font-size:12px; color:#6b7280;">Nessun fornitore registrato.</p>';
+            } else {
+                fornitori.forEach(f => {
+                    let item = document.createElement('div');
+                    item.className = 'supplier-item';
+                    item.innerHTML = `
+                        <div class="supplier-info">
+                            <strong>🚚 ${f.nome}</strong>
+                            <span>📞 ${f.tel || 'Nessun numero'}</span>
+                        </div>
+                        <div>
+                            <button class="btn btn-danger btn-sm" onclick="deleteFornitore('${f.id}')">🗑️ Cancella</button>
+                        </div>
+                    `;
+                    fornitoriContainer.appendChild(item);
+                });
+            }
         }
 
         function addCategoria() {
@@ -694,6 +724,32 @@
             document.getElementById('new-fornitore-nome').value = '';
             document.getElementById('new-fornitore-tel').value = '';
             renderGestione();
+        }
+
+        function deleteFornitore(fId) {
+            let fObj = fornitori.find(f => f.id === fId);
+            if (!fObj) return;
+
+            let countProds = prodotti.filter(p => p.fornitoreId === fId).length;
+            let msg = `Vuoi cancellare il fornitore "${fObj.nome}"?`;
+            if (countProds > 0) {
+                msg += `\nATTENZIONE: Verranno eliminati anche i ${countProds} prodotti associati a questo fornitore!`;
+            }
+
+            if (confirm(msg)) {
+                // Elimina fornitore
+                fornitori = fornitori.filter(f => f.id !== fId);
+                
+                // Elimina i prodotti associati al fornitore ed eventuali articoli in carrello
+                let deletedProdIds = prodotti.filter(p => p.fornitoreId === fId).map(p => p.id);
+                prodotti = prodotti.filter(p => p.fornitoreId !== fId);
+                deletedProdIds.forEach(pId => delete carrello[pId]);
+
+                saveData();
+                renderGestione();
+                renderOrdini();
+                renderIndice();
+            }
         }
 
         function addProdotto() {
