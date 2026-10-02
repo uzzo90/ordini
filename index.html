@@ -260,18 +260,18 @@
                 <div id="categories-list-container" style="margin-top: 8px;"></div>
             </div>
 
-            <!-- INCOLLA MULTI-RIGA / BLOCCO -->
+            <!-- INCOLLA MULTI-RIGA / BLOCCO INTELLIGENTE -->
             <div class="card" style="border: 2px solid #4b5320;">
-                <div class="card-title" style="color: #4b5320;">⚡ Importa Prodotti in Blocco (Incolla Testo)</div>
+                <div class="card-title" style="color: #4b5320;">⚡ Importazione Intelligente da Testo / Gemini</div>
                 <label style="font-size: 11px; color: #6b7280;">Fornitore di Destinazione:</label>
                 <select id="bulk-prod-fornitore"></select>
                 
-                <label style="font-size: 11px; color: #6b7280;">Categoria:</label>
+                <label style="font-size: 11px; color: #6b7280;">Categoria di Riserva (se non riconosciuta):</label>
                 <select id="bulk-prod-cat"></select>
 
-                <textarea id="bulk-text-input" placeholder="Incolla qui le righe del listino, es:&#10;Sarde Fresche kg 8.50&#10;Gambero Rosso kg 35,00&#10;Pomodoro Ciliegino 2.20"></textarea>
+                <textarea id="bulk-text-input" placeholder="Incolla qui il testo da foto o da Gemini, es:&#10;Sarde Fresche kg 8.50&#10;Ortofrutta - Pomodoro Ciliegino 2.20&#10;Mozzarella di bufala kg 12,00&#10;Farina 00 kg 1.10"></textarea>
                 
-                <button class="btn btn-primary" style="width: 100%;" onclick="addBulkProducts()">+ Aggiungi Tutti i Prodotti in Blocco</button>
+                <button class="btn btn-primary" style="width: 100%;" onclick="addBulkProducts()">🧠 Smista e Aggiungi in Blocco</button>
             </div>
 
             <!-- AGGIUNTA MANUALE SINGOLA -->
@@ -322,6 +322,45 @@
         let prodotti = JSON.parse(localStorage.getItem('savino_prodotti')) || defaultProdotti;
         let carrello = JSON.parse(localStorage.getItem('savino_carrello')) || {};
         let currentCat = categorieObj[0]?.nome || 'Pesce';
+
+        /* MAPPA DI PAROLE CHIAVE PER SMISTAMENTO AUTOMATICO */
+        const keywordsMap = {
+            'Pesce': ['sarda', 'sarde', 'gambero', 'orata', 'spigola', 'calamaro', 'polpo', 'pesce', 'tonno', 'cozze', 'vongole', 'baccalà', 'merluzzo', 'triglia', 'ricciola', 'trancio'],
+            'Carne': ['manzo', 'vitello', 'maiale', 'pollo', 'salsiccia', 'hamburger', 'filetto', 'carne', 'macinato', 'costina', 'agnello', 'tacchino', 'pancetta'],
+            'Ortofrutta': ['pomodoro', 'zucchina', 'zucchine', 'melanzana', 'melanzane', 'patata', 'patate', 'cipolla', 'cipolle', 'limone', 'limoni', 'insalata', 'mela', 'mele', 'prezzemolo', 'basilico', 'aglio', 'carota', 'carote', 'zucca'],
+            'Latticini': ['mozzarella', 'latte', 'panna', 'ricotta', 'parmigiano', 'formaggio', 'burro', 'scamorza', 'provola', 'gorgonzola', 'pecorino', 'grana'],
+            'Bevande': ['vino', 'birra', 'acqua', 'caffè', 'succo', 'prosecco', 'amaro', 'liquore', 'bibita', 'coca', 'fanta'],
+            'Secco/Scatolame': ['pasta', 'riso', 'pelati', 'scatola', 'zucchero', 'sale', 'spaghetti', 'penne'],
+            'Olio/Condimenti': ['olio', 'aceto', 'maionese', 'ketchup', 'senape', 'salsa'],
+            'Farina/Cereali': ['farina', 'semola', 'lievito', 'amido'],
+            'Pane/Forno': ['pane', 'focaccia', 'panino', 'pancarrè', 'grissini']
+        };
+
+        function detectCategory(text, fallbackCat) {
+            let lowerText = text.toLowerCase();
+
+            // 1. Controlla se la categoria è scritta esplicitamente nel testo (es. "Pesce - Sarde")
+            for (let c of categorieObj) {
+                if (lowerText.startsWith(c.nome.toLowerCase() + '-') || 
+                    lowerText.startsWith(c.nome.toLowerCase() + ':') ||
+                    lowerText.includes('[' + c.nome.toLowerCase() + ']')) {
+                    return c.nome;
+                }
+            }
+
+            // 2. Cerca match tra le parole chiave
+            for (let catName in keywordsMap) {
+                let match = keywordsMap[catName].some(kw => lowerText.includes(kw));
+                if (match) {
+                    // Verifica se questa categoria esiste nell'app dell'utente
+                    let existingCat = categorieObj.find(c => c.nome.toLowerCase().includes(catName.toLowerCase()) || catName.toLowerCase().includes(c.nome.toLowerCase()));
+                    if (existingCat) return existingCat.nome;
+                }
+            }
+
+            // 3. Riserva
+            return fallbackCat;
+        }
 
         function getCatIcon(catName) {
             let found = categorieObj.find(c => c.nome === catName);
@@ -676,7 +715,7 @@
         function addBulkProducts() {
             let text = document.getElementById('bulk-text-input').value.trim();
             let fornitoreId = document.getElementById('bulk-prod-fornitore').value;
-            let cat = document.getElementById('bulk-prod-cat').value;
+            let fallbackCat = document.getElementById('bulk-prod-cat').value;
 
             if (!text) {
                 alert('Incolla almeno una riga di testo.');
@@ -690,14 +729,20 @@
                 let trimmed = line.trim();
                 if (!trimmed) return;
 
-                let priceMatch = trimmed.match(/(\d+[.,]?\d*)\s*(€|euro)?$/i) || trimmed.match(/(\d+[.,]\d+)/);
+                // Riconoscimento Categoria Automatico o da Testo
+                let assignedCat = detectCategory(trimmed, fallbackCat);
+
+                // Pulizia del nome se la categoria era contenuta come prefisso (es: "Pesce - Sarde" -> "Sarde")
+                let cleanLine = trimmed.replace(new RegExp('^' + assignedCat + '[\\s:-]+', 'i'), '');
+
+                let priceMatch = cleanLine.match(/(\d+[.,]?\d*)\s*(€|euro)?$/i) || cleanLine.match(/(\d+[.,]\d+)/);
                 let price = 0;
-                let name = trimmed;
+                let name = cleanLine;
                 let unita = 'kg';
 
                 if (priceMatch) {
                     price = parsePrice(priceMatch[1]);
-                    name = trimmed.replace(priceMatch[0], '').trim();
+                    name = cleanLine.replace(priceMatch[0], '').trim();
                 }
 
                 if (/\b(kg|chili|chilogrammi)\b/i.test(name)) {
@@ -720,7 +765,7 @@
                     prodotti.push({
                         id: 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
                         nome: name,
-                        cat: cat,
+                        cat: assignedCat,
                         fornitoreId: fornitoreId,
                         unita: unita,
                         prezzo: price
@@ -732,7 +777,7 @@
             if (addedCount > 0) {
                 saveData();
                 document.getElementById('bulk-text-input').value = '';
-                alert(`Aggiunti con successo ${addedCount} prodotti!`);
+                alert(`Smistati e aggiunti con successo ${addedCount} prodotti!`);
                 renderOrdini();
             } else {
                 alert('Nessun prodotto valido trovato nel testo.');
