@@ -360,6 +360,31 @@
         let prodotti = JSON.parse(localStorage.getItem('savino_prodotti')) || defaultProdotti;
         let carrello = JSON.parse(localStorage.getItem('savino_carrello')) || {};
         let currentCat = categorieObj[0]?.nome || 'Pesce';
+        // --- SINCRONIZZAZIONE IN TEMPO REALE CON FIREBASE ---
+db.ref('savino_data').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+        if (data.prodotti) prodotti = data.prodotti;
+        if (data.fornitori) fornitori = data.fornitori;
+        if (data.categorieObj) categorieObj = data.categorieObj;
+        if (data.carrello) carrello = data.carrello;
+        if (typeof render === 'function') render();
+    }
+});
+
+function salvaDatiFirebase() {
+    localStorage.setItem('savino_prodotti', JSON.stringify(prodotti));
+    localStorage.setItem('savino_fornitori', JSON.stringify(fornitori));
+    localStorage.setItem('savino_categorie_obj', JSON.stringify(categorieObj));
+    localStorage.setItem('savino_carrello', JSON.stringify(carrello));
+
+    db.ref('savino_data').set({
+        prodotti: prodotti,
+        fornitori: fornitori,
+        categorieObj: categorieObj,
+        carrello: carrello
+    });
+}
 
         /* MAPPA DI PAROLE CHIAVE PER SMISTAMENTO AUTOMATICO */
         const keywordsMap = {
@@ -408,13 +433,9 @@
         }
 
         function saveData() {
-            localStorage.setItem('savino_categorie_obj', JSON.stringify(categorieObj));
-            localStorage.setItem('savino_fornitori', JSON.stringify(fornitori));
-            localStorage.setItem('savino_prodotti', JSON.stringify(prodotti));
-            localStorage.setItem('savino_carrello', JSON.stringify(carrello));
-            updateHeaderTotal();
-        }
-
+    salvaDatiFirebase();
+    updateHeaderTotal();
+            }
         function switchTab(tabId, ev) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
