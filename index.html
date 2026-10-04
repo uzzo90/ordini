@@ -2,845 +2,851 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👨‍🍳</text></svg>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>UZZO CHEF ordini</title>
-    
+
     <!-- Font Moderno Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- Libreria XLSX per esportazione Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        /* SFONDO SCURO CON PATTERN STILIZZATO DI CIBO (SVG VECTOR) */
-        body { 
-            background-color: #18191a; 
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' opacity='0.06'%3E%3Cpath fill='%2523ffffff' d='M20 15a3 3 0 0 0-3 3v12a3 3 0 0 0 6 0V18a3 3 0 0 0-3-3zm10 0a3 3 0 0 0-3 3v12a3 3 0 0 0 6 0V18a3 3 0 0 0-3-3zm10 0a3 3 0 0 0-3 3v12a3 3 0 0 0 6 0V18a3 3 0 0 0-3-3zm-15 18a3 3 0 0 0-3 3v15a3 3 0 0 0 6 0V36a3 3 0 0 0-3-3zm70-18c-5 0-9 4-9 9v15h3v21a3 3 0 0 0 6 0V15zm-30 45c-8 0-15 5-15 12s7 12 15 12 15-5 15-12-7-12-15-12zm-3 8a3 3 0 1 1 6 0 3 3 0 0 1-6 0zm45-8c-6 0-10 4-10 10 0 8 10 18 10 18s10-10 10-18c0-6-4-10-10-10zm0 7a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm-60 25l-12 20h24l-12-20zm-40 0c-4 0-8 3-8 8s4 8 8 8h12v-16H20z'/%3E%3C/svg%3E");
-            color: #f3f4f6; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
-            overflow: hidden; 
+
+        body {
+            background-color: #18191a;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' opacity='0.06'%3E%3Cpath fill='%23ffffff' d='M30 15c-3.3 0-6 2.7-6 6v15h-3c-1.1 0-2 .9-2 2s.9 2 2 2h3v15c0 3.3 2.7 6 6 6s6-2.7 6-6V40h3c1.1 0 2-.9 2-2s-.9-2-2-2h-3V21c0-3.3-2.7-6-6-6zm0 6c1.1 0 2 .9 2 2v13h-4V23c0-1.1.9-2 2-2zm60 0c-4.4 0-8 3.6-8 8v15c0 4.4 3.6 8 8 8s8-3.6 8-8V29c0-4.4-3.6-8-8-8zm4 23c0 2.2-1.8 4-4 4s-4-1.8-4-4V29c0-2.2 1.8-4 4-4s4 1.8 4 4v15zM30 75c-5 0-9 4-9 9v12c0 1.1.9 2 2 2s2-.9 2-2V84c0-2.8 2.2-5 5-5s5 2.2 5 5v12c0 1.1.9 2 2 2s2-.9 2-2V84c0-5-4-9-9-9zm60 0c-6.6 0-12 5.4-12 12v9c0 1.1.9 2 2 2s2-.9 2-2v-9c0-4.4 3.6-8 8-8s8 3.6 8 8v9c0 1.1.9 2 2 2s2-.9 2-2v-9c0-6.6-5.4-12-12-12z'/%3E%3C/svg%3E");
+            color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding-bottom: 90px;
         }
-        
-        /* HEADER & NAV IN VERDE OLIVA CON EFFETTO VETRO SCURO */
-        header { 
-            background: rgba(24, 25, 26, 0.85); 
-            backdrop-filter: blur(12px); 
-            -webkit-backdrop-filter: blur(12px);
-            color: #f3f4f6; 
-            padding: 12px 16px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 2px solid #656d4a;
+
+        header {
+            background: linear-gradient(135deg, #242526 0%, #1c1e21 100%);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3a3b3c;
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-        header h1 { font-size: 18px; font-weight: 800; color: #a3b18a; letter-spacing: -0.5px; }
-        
-        nav { 
-            display: flex; 
-            background: rgba(30, 31, 32, 0.9); 
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid #2d312e; 
-            overflow-x: auto; 
-            position: sticky;
-            top: 53px;
-            z-index: 99;
-        }
-        .nav-btn { 
-            flex: 1; 
-            min-width: 70px; 
-            padding: 12px 6px; 
-            text-align: center; 
-            color: #9ca3af; 
-            background: none; 
-            border: none; 
-            font-size: 12px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            white-space: nowrap; 
-            border-bottom: 3px solid transparent; 
-            transition: all 0.2s ease;
-        }
-        .nav-btn.active { color: #a3b18a; border-bottom-color: #a3b18a; background-color: rgba(101, 109, 74, 0.2); }
 
-        .main-content { flex: 1; overflow-y: auto; padding: 14px; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        /* CARDS SCURE CON BORDI VERDE OLIVA SFUMATI */
-        .card { 
-            background: #242526; 
-            border-radius: 12px; 
-            border: 1px solid #3a3b3c; 
-            padding: 14px; 
-            margin-bottom: 14px; 
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-        
-        .card-title { font-size: 14px; font-weight: 700; color: #e4e6eb; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .card-title-collapsible { font-size: 14px; font-weight: 700; color: #e4e6eb; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; padding: 2px 0; }
-        .arrow-icon { font-size: 11px; color: #a3b18a; transition: transform 0.25s ease; display: inline-block; }
-        .arrow-icon.rotated { transform: rotate(180deg); }
-
-        /* PULSANTI VERDE OLIVA E ACCENTI */
-        .btn { 
-            padding: 9px 14px; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            font-size: 13px; 
-            border: none; 
-            cursor: pointer; 
-            transition: all 0.15s ease;
-            display: inline-flex;
+        .brand-container {
+            display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            font-size: 28px;
+            background: #3a3b3c;
+            padding: 6px;
+            border-radius: 12px;
+            line-height: 1;
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            color: #22c55e;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
             gap: 6px;
         }
-        .btn:active { transform: scale(0.96); }
-        .btn-primary { background-color: #656d4a; color: #ffffff; box-shadow: 0 2px 6px rgba(101, 109, 74, 0.4); }
-        .btn-primary:hover { background-color: #58603e; }
-        .btn-success { background-color: #16a34a; color: white; box-shadow: 0 2px 4px rgba(22, 163, 74, 0.3); }
-        .btn-danger { background-color: #dc2626; color: white; }
-        .btn-warning { background-color: #d97706; color: white; }
-        .btn-sm { padding: 4px 8px; font-size: 11px; border-radius: 6px; }
 
-        /* PULSANTE WHATSAPP */
-        .btn-whatsapp {
-            background-color: #25D366;
-            color: white;
-            font-weight: 700;
-            box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
-            border-radius: 8px;
-            padding: 10px 16px;
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #22c55e;
         }
-        .btn-whatsapp:active { transform: scale(0.95); }
 
-        /* GRIGLIA CATEGORIE SCURA */
-        .grid-select { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; margin-bottom: 12px; }
-        .grid-btn { 
-            padding: 10px 6px; 
-            background: #18191a; 
-            border: 1px solid #3a3b3c; 
-            border-radius: 10px; 
-            text-align: center; 
-            font-size: 12px; 
-            font-weight: 600; 
-            color: #d1d5db; 
-            cursor: pointer; 
-            transition: all 0.15s ease;
+        .container {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
         }
-        .grid-btn:active { transform: scale(0.95); }
-        .grid-btn.selected { background: #656d4a; color: white; border-color: #a3b18a; box-shadow: 0 3px 8px rgba(101, 109, 74, 0.4); }
 
-        /* PRODOTTI LISTA CON CONTROLLI + / - SCURI */
-        .product-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #3a3b3c; }
-        .qty-controls { display: flex; align-items: center; gap: 8px; }
-        .qty-btn { 
-            width: 34px; 
-            height: 34px; 
-            border-radius: 8px; 
-            border: 1px solid #4b4c4e; 
-            background: #3a3b3c; 
-            font-weight: 700; 
-            font-size: 16px; 
-            color: #a3b18a;
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .category-card {
+            background: #242526;
+            border: 1px solid #3a3b3c;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             cursor: pointer;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-            transition: all 0.1s ease;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            position: relative;
         }
-        .qty-btn:active { transform: scale(0.88); background: #4b4c4e; }
-        .qty-val { width: 32px; text-align: center; font-weight: 700; font-size: 15px; color: #f3f4f6; }
 
-        input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #3a3b3c; border-radius: 8px; font-size: 13px; margin-bottom: 10px; background: #18191a; color: #f3f4f6; transition: border-color 0.2s; }
-        input:focus, select:focus, textarea:focus { border-color: #a3b18a; outline: none; }
-        textarea { resize: vertical; min-height: 80px; font-family: monospace; }
-        
-        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: rgba(163, 177, 138, 0.15); color: #a3b18a; font-weight: 700; border: 1px solid rgba(163, 177, 138, 0.3); }
-        
-        /* TOTALE HEADER VERDE OLIVA */
-        #header-tot { 
-            font-size: 13px; 
-            font-weight: 700;
-            background: #656d4a; 
+        .category-card:active {
+            transform: scale(0.97);
+            background: #3a3b3c;
+        }
+
+        .category-card .icon {
+            font-size: 32px;
+        }
+
+        .category-card .title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e4e6eb;
+        }
+
+        .badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ef4444;
             color: white;
-            padding: 5px 11px; 
-            border-radius: 20px; 
-            box-shadow: 0 2px 6px rgba(101, 109, 74, 0.4);
-            transition: transform 0.2s ease;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: none;
         }
-        #header-tot.bounce { transform: scale(1.12); }
 
-        /* TABELLA CATALOGO SCURA */
-        .catalog-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
-        .catalog-table th { background: #18191a; text-align: left; padding: 8px; color: #9ca3af; font-weight: 600; border-bottom: 1px solid #3a3b3c; }
-        .catalog-table td { padding: 8px; border-bottom: 1px solid #2a2b2c; vertical-align: middle; }
-        .actions-cell { display: flex; gap: 4px; justify-content: flex-end; }
-        
-        .collapsible-body { display: block; margin-top: 4px; transition: all 0.2s ease; }
-        .collapsible-body.collapsed { display: none; }
+        .badge.active {
+            display: inline-block;
+        }
 
-        .cat-tag { display: inline-flex; align-items: center; justify-content: space-between; background: #18191a; border: 1px solid #3a3b3c; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin: 3px; font-weight: 500; color: #e4e6eb; }
+        .search-box, .import-box, .select-box {
+            background: #242526;
+            border: 1px solid #3a3b3c;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+            width: 100%;
+            color: white;
+            font-size: 14px;
+        }
 
-        /* LISTA FORNITORI IN GESTIONE SCURA */
-        .supplier-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: #18191a; border: 1px solid #3a3b3c; border-radius: 8px; margin-bottom: 6px; }
-        .supplier-info { font-size: 13px; }
-        .supplier-info strong { display: block; color: #f3f4f6; }
-        .supplier-info span { font-size: 11px; color: #9ca3af; }
+        .search-box input, .import-box textarea, .select-box select {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .import-box textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+            margin-bottom: 12px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-whatsapp {
+            background: #25D366;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn-excel {
+            background: #107c41;
+            box-shadow: 0 4px 12px rgba(16, 124, 65, 0.3);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .item-card {
+            background: #242526;
+            border: 1px solid #3a3b3c;
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .item-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #f3f4f6;
+        }
+
+        .item-sub {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qty-btn {
+            background: #3a3b3c;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-btn:active {
+            background: #4e4f50;
+        }
+
+        .qty-display {
+            font-size: 14px;
+            font-weight: 700;
+            width: 28px;
+            text-align: center;
+        }
+
+        .accordion-header {
+            background: #242526;
+            border: 1px solid #3a3b3c;
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            cursor: pointer;
+            color: #e4e6eb;
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 10px 0;
+        }
+
+        .accordion-content.open {
+            display: block;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #242526;
+            border-top: 1px solid #3a3b3c;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #b0b3b8;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            width: 25%;
+        }
+
+        .nav-item.active {
+            color: #22c55e;
+        }
+
+        .nav-item .nav-icon {
+            font-size: 20px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #242526;
+            border: 1px solid #3a3b3c;
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            background: #18191a;
+            border: 1px solid #3a3b3c;
+            border-radius: 8px;
+            padding: 10px;
+            color: white;
+            font-size: 14px;
+        }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
+    <!-- HEADER -->
     <header>
-        <div>
-            <h1>UZZO CHEF ordini</h1>
-            <span class="status-badge">🍳 Cucina / Locale</span>
+        <div class="brand-container">
+            <div class="brand-icon">👨‍🍳</div>
+            <div>
+                <div class="brand-title">UZZO CHEF</div>
+                <div class="brand-subtitle">Gestione Ordini</div>
+            </div>
         </div>
-        <span id="header-tot">Tot: €0.00</span>
+        <div class="status-badge">
+            <span class="status-dot"></span> Online
+        </div>
     </header>
 
-    <nav>
-        <button class="nav-btn active" onclick="switchTab('tab-ordini', event)">🛒 Ordina</button>
-        <button class="nav-btn" onclick="switchTab('tab-fornitori', event)">📱 Invia</button>
-        <button class="nav-btn" onclick="switchTab('tab-indice', event)">📋 Indice</button>
-        <button class="nav-btn" onclick="switchTab('tab-gestione', event)">⚙️ Gestisci</button>
-    </nav>
-
-    <div class="main-content">
-        <!-- TAB ORDINI -->
-        <div id="tab-ordini" class="tab-content active">
-            <div class="card">
-                <div class="card-title">Categorie Prodotti</div>
-                <div class="grid-select" id="cat-grid"></div>
+    <!-- CONTAINER PRINCIPALE -->
+    <div class="container">
+        
+        <!-- SCHEDA 1: HOME / CATEGORIE -->
+        <div id="tab-home" class="tab-content active">
+            <div class="categories-grid">
+                <div class="category-card" onclick="openCategory('Carne')">
+                    <span class="icon">🥩</span>
+                    <span class="title">Carne</span>
+                    <span class="badge" id="badge-Carne">0</span>
+                </div>
+                <div class="category-card" onclick="openCategory('Pesce')">
+                    <span class="icon">🐟</span>
+                    <span class="title">Pesce</span>
+                    <span class="badge" id="badge-Pesce">0</span>
+                </div>
+                <div class="category-card" onclick="openCategory('Ortofrutta')">
+                    <span class="icon">🥬</span>
+                    <span class="title">Ortofrutta</span>
+                    <span class="badge" id="badge-Ortofrutta">0</span>
+                </div>
+                <div class="category-card" onclick="openCategory('Latticini')">
+                    <span class="icon">🧀</span>
+                    <span class="title">Latticini</span>
+                    <span class="badge" id="badge-Latticini">0</span>
+                </div>
+                <div class="category-card" onclick="openCategory('Dispensa')">
+                    <span class="icon">📦</span>
+                    <span class="title">Dispensa</span>
+                    <span class="badge" id="badge-Dispensa">0</span>
+                </div>
+                <div class="category-card" onclick="openCategory('Bevande')">
+                    <span class="icon">🍷</span>
+                    <span class="title">Bevande</span>
+                    <span class="badge" id="badge-Bevande">0</span>
+                </div>
             </div>
-            <div class="card">
-                <div class="card-title">Prodotti</div>
-                <div id="prod-list"></div>
+
+            <!-- RICERCA E IMPORTAZIONE VELOCE -->
+            <div class="import-box">
+                <label style="font-size:12px; color:#9ca3af; display:block; margin-bottom:6px;">⚡ Importazione Rapida (Incolla testo o lista AI)</label>
+                <textarea id="import-text" placeholder="Es: 2kg Farina 00, 3 cassette Pomodori, 5L Olio EVO..."></textarea>
+                <button class="btn" style="margin-top:8px; margin-bottom:0;" onclick="importItemsText()">Elabora e Aggiungi</button>
             </div>
         </div>
 
-        <!-- TAB INVIA -->
+        <!-- SCHEDA 2: CARRELLO ORDINI -->
+        <div id="tab-ordini" class="tab-content">
+            <h2 style="font-size:18px; font-weight:700; margin-bottom:12px;">🛒 Riepilogo Ordini In Corso</h2>
+            <div id="cart-list" class="item-list" style="margin-bottom:16px;">
+                <p style="color:#9ca3af; text-align:center; padding:20px;">Nessun articolo selezionato.</p>
+            </div>
+
+            <div class="select-box">
+                <label style="font-size:12px; color:#9ca3af; display:block; margin-bottom:4px;">Seleziona Fornitore per l'invio</label>
+                <select id="supplier-select">
+                    <option value="">-- Seleziona Fornitore --</option>
+                </select>
+            </div>
+
+            <button class="btn btn-whatsapp" onclick="sendWhatsAppOrder()">📲 Invia Ordine via WhatsApp</button>
+            <button class="btn btn-danger" onclick="clearCart()">🗑️ Svuota Carrello</button>
+        </div>
+
+        <!-- SCHEDA 3: CATALOGO ARTICOLI -->
+        <div id="tab-catalogo" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h2 style="font-size:18px; font-weight:700;">📋 Indice Catalogo</h2>
+                <button class="btn btn-excel" style="width:auto; padding:8px 12px; font-size:12px; margin:0;" onclick="exportCatalogExcel()">📊 Esporta Excel</button>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="catalog-search" placeholder="🔍 Cerca articolo nel catalogo..." oninput="filterCatalog()">
+            </div>
+
+            <button class="btn" onclick="openNewItemModal()">➕ Aggiungi Nuovo Articolo</button>
+
+            <div id="catalog-accordion-list">
+                <!-- Sezioni generate dinamicamente per fornitore -->
+            </div>
+        </div>
+
+        <!-- SCHEDA 4: GESTIONE FORNITORI -->
         <div id="tab-fornitori" class="tab-content">
-            <div id="summary-fornitori">Nessun prodotto selezionato.</div>
-        </div>
-
-        <!-- TAB INDICE CATALOGO -->
-        <div id="tab-indice" class="tab-content">
-            <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h3 style="font-size: 15px; font-weight: 700;">Catalogo per Fornitore</h3>
-                    <span style="font-size: 11px; color: #9ca3af;">Tocca un fornitore per aprire/chiudere</span>
-                </div>
-                <button class="btn btn-success" onclick="exportToExcel()">📥 Scarica Excel</button>
-            </div>
-            <div id="indice-container"></div>
-        </div>
-
-        <!-- TAB GESTIONE -->
-        <div id="tab-gestione" class="tab-content">
+            <h2 style="font-size:18px; font-weight:700; margin-bottom:12px;">🚚 Gestione Fornitori</h2>
+            <button class="btn" onclick="openNewSupplierModal()">➕ Aggiungi Nuovo Fornitore</button>
             
-            <!-- GESTIONE CATEGORIE CON SCELTA ICONA -->
-            <div class="card">
-                <div class="card-title">🏷️ Gestisci Categorie & Icone</div>
-                <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-                    <select id="new-cat-icon" style="width: 75px; margin-bottom:0;">
-                        <option value="🐟">🐟 Pesce</option>
-                        <option value="🥩">🥩 Carne</option>
-                        <option value="🥦">🥦 Ortofrutta</option>
-                        <option value="🥗">🥗 Insalate/Verdura</option>
-                        <option value="🧀">🧀 Latticini/Formaggi</option>
-                        <option value="🍝">🍝 Pasta/Riso</option>
-                        <option value="🌾">🌾 Farina/Cereali</option>
-                        <option value="🥫">🥫 Secco/Scatolame</option>
-                        <option value="🥖">🥖 Pane/Forno</option>
-                        <option value="🍷">🍷 Vino/Bevande</option>
-                        <option value="🍺">🍺 Birra/Alcolici</option>
-                        <option value="☕">☕ Caffe/Bar</option>
-                        <option value="🏺">🏺 Olio/Condimenti</option>
-                        <option value="🌶️">🌶️️ Spezie/Aromi</option>
-                        <option value="🍰">🍰 Dolci/Pasticceria</option>
-                        <option value="🧼">🧼 Pulizia/Igiene</option>
-                        <option value="🛒">🛒 Altro</option>
-                    </select>
-                    <input type="text" id="new-cat-nome" placeholder="Nome Categoria" style="margin-bottom:0; flex:1;">
-                    <button class="btn btn-primary" onclick="addCategoria()">+ Aggiungi</button>
-                </div>
-                <div id="categories-list-container" style="margin-top: 8px;"></div>
+            <div id="suppliers-list" class="item-list" style="margin-top:12px;">
+                <!-- Lista fornitori -->
             </div>
+        </div>
 
-            <!-- INCOLLA MULTI-RIGA / BLOCCO INTELLIGENTE -->
-            <div class="card" style="border: 1px solid #656d4a;">
-                <div class="card-title" style="color: #a3b18a;">⚡ Importazione Intelligente da Testo / Gemini</div>
-                <label style="font-size: 11px; color: #9ca3af;">Fornitore di Destinazione:</label>
-                <select id="bulk-prod-fornitore"></select>
-                
-                <label style="font-size: 11px; color: #9ca3af;">Categoria di Riserva (se non riconosciuta):</label>
-                <select id="bulk-prod-cat"></select>
+    </div>
 
-                <textarea id="bulk-text-input" placeholder="Incolla qui il testo da foto o da Gemini, es:&#10;Sarde Fresche kg 8.50&#10;Ortofrutta - Pomodoro Ciliegino 2.20&#10;Mozzarella di bufala kg 12,00&#10;Farina 00 kg 1.10"></textarea>
-                
-                <button class="btn btn-primary" style="width: 100%;" onclick="addBulkProducts()">🧠 Smista e Aggiungi in Blocco</button>
+    <!-- NAVBAR IN BASSO -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('tab-home')">
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-ordini')">
+            <span class="nav-icon">🛒</span>
+            <span>Ordini</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-catalogo')">
+            <span class="nav-icon">📋</span>
+            <span>Catalogo</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-fornitori')">
+            <span class="nav-icon">🚚</span>
+            <span>Fornitori</span>
+        </div>
+    </div>
+
+    <!-- MODALE NUOVO ARTICOLO -->
+    <div class="modal-overlay" id="modal-item">
+        <div class="modal-box">
+            <div class="modal-title">Aggiungi Articolo</div>
+            <div class="form-group">
+                <label>Nome Articolo</label>
+                <input type="text" id="item-name-input" placeholder="Es. Farina Tipo 0">
             </div>
-
-            <!-- AGGIUNTA MANUALE SINGOLA -->
-            <div class="card">
-                <div class="card-title">+ Aggiungi Prodotto Singolo</div>
-                <input type="text" id="new-prod-nome" placeholder="Nome Prodotto">
-                <select id="new-prod-cat"></select>
-                <select id="new-prod-fornitore"></select>
-                <input type="text" id="new-prod-unita" placeholder="Unità (es. kg, cassa)">
-                <input type="text" id="new-prod-prezzo" placeholder="Prezzo (€)">
-                <button class="btn btn-primary" onclick="addProdotto()">+ Aggiungi Prodotto</button>
+            <div class="form-group">
+                <label>Categoria</label>
+                <select id="item-category-input">
+                    <option value="Carne">Carne</option>
+                    <option value="Pesce">Pesce</option>
+                    <option value="Ortofrutta">Ortofrutta</option>
+                    <option value="Latticini">Latticini</option>
+                    <option value="Dispensa">Dispensa</option>
+                    <option value="Bevande">Bevande</option>
+                </select>
             </div>
-
-            <!-- FORNITORI -->
-            <div class="card">
-                <div class="card-title">🚚 Gestisci Fornitori</div>
-                <input type="text" id="new-fornitore-nome" placeholder="Nome Fornitore">
-                <input type="text" id="new-fornitore-tel" placeholder="Numero WhatsApp (es. +39330000000)">
-                <button class="btn btn-primary" style="width: 100%; margin-bottom: 12px;" onclick="addFornitore()">+ Aggiungi Fornitore</button>
-                
-                <div style="font-size: 12px; font-weight: 700; color: #e4e6eb; margin-bottom: 8px;">Fornitori Registrati:</div>
-                <div id="fornitori-list-container"></div>
+            <div class="form-group">
+                <label>Fornitore</label>
+                <select id="item-supplier-input"></select>
+            </div>
+            <div class="form-group">
+                <label>Unità di misura (es. Kg, L, Cassa, Pz)</label>
+                <input type="text" id="item-unit-input" placeholder="Kg">
+            </div>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button class="btn" onclick="saveNewItem()">Salva</button>
+                <button class="btn btn-danger" onclick="closeModal('modal-item')">Annulla</button>
             </div>
         </div>
     </div>
 
-    <script>
-        let defaultCategorieObj = [
-            { icon: '🐟', nome: 'Pesce' },
-            { icon: '🥩', nome: 'Carne' },
-            { icon: '🥦', nome: 'Ortofrutta' },
-            { icon: '🥫', nome: 'Secco/Scatolame' },
-            { icon: '🧀', nome: 'Latticini' },
-            { icon: '🍷', nome: 'Bevande' },
-            { icon: '🛒', nome: 'Altro' }
-        ];
+    <!-- MODALE NUOVO FORNITORE -->
+    <div class="modal-overlay" id="modal-supplier">
+        <div class="modal-box">
+            <div class="modal-title">Aggiungi Fornitore</div>
+            <div class="form-group">
+                <label>Nome Fornitore / Azienda</label>
+                <input type="text" id="sup-name-input" placeholder="Es. Ortofrutta Rossi">
+            </div>
+            <div class="form-group">
+                <label>Numero WhatsApp (con prefisso, es. +393401234567)</label>
+                <input type="text" id="sup-phone-input" placeholder="+393401234567">
+            </div>
+            <div style="display:flex; gap:8px; margin-top:16px;">
+                <button class="btn" onclick="saveNewSupplier()">Salva</button>
+                <button class="btn btn-danger" onclick="closeModal('modal-supplier')">Annulla</button>
+            </div>
+        </div>
+    </div>
 
-        let defaultFornitori = [
-            { id: 'f1', nome: 'Ortofrutta Locale', tel: '+39330000001' },
-            { id: 'f2', nome: 'Pescheria del Porto', tel: '+39330000002' }
-        ];
+    <!-- LOGICA DI SCRIPT E CONFIGURAZIONE FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        let defaultProdotti = [
-            { id: 'p1', nome: 'Sarde Fresche', cat: 'Pesce', fornitoreId: 'f2', unita: 'kg', prezzo: 8.5 },
-            { id: 'p2', nome: 'Gambero Rosso', cat: 'Pesce', fornitoreId: 'f2', unita: 'kg', prezzo: 35.0 },
-            { id: 'p3', nome: 'Pomodoro Ciliegino', cat: 'Ortofrutta', fornitoreId: 'f1', unita: 'kg', prezzo: 2.2 }
-        ];
-
-        let categorieObj = JSON.parse(localStorage.getItem('savino_categorie_obj')) || defaultCategorieObj;
-        let fornitori = JSON.parse(localStorage.getItem('savino_fornitori')) || defaultFornitori;
-        let prodotti = JSON.parse(localStorage.getItem('savino_prodotti')) || defaultProdotti;
-        let carrello = JSON.parse(localStorage.getItem('savino_carrello')) || {};
-        let currentCat = categorieObj[0]?.nome || 'Pesce';
-
-        /* MAPPA DI PAROLE CHIAVE PER SMISTAMENTO AUTOMATICO */
-        const keywordsMap = {
-            'Pesce': ['sarda', 'sarde', 'gambero', 'orata', 'spigola', 'calamaro', 'polpo', 'pesce', 'tonno', 'cozze', 'vongole', 'baccalà', 'merluzzo', 'triglia', 'ricciola', 'trancio'],
-            'Carne': ['manzo', 'vitello', 'maiale', 'pollo', 'salsiccia', 'hamburger', 'filetto', 'carne', 'macinato', 'costina', 'agnello', 'tacchino', 'pancetta'],
-            'Ortofrutta': ['pomodoro', 'zucchina', 'zucchine', 'melanzana', 'melanzane', 'patata', 'patate', 'cipolla', 'cipolle', 'limone', 'limoni', 'insalata', 'mela', 'mele', 'prezzemolo', 'basilico', 'aglio', 'carota', 'carote', 'zucca'],
-            'Latticini': ['mozzarella', 'latte', 'panna', 'ricotta', 'parmigiano', 'formaggio', 'burro', 'scamorza', 'provola', 'gorgonzola', 'pecorino', 'grana'],
-            'Bevande': ['vino', 'birra', 'acqua', 'caffè', 'succo', 'prosecco', 'amaro', 'liquore', 'bibita', 'coca', 'fanta'],
-            'Secco/Scatolame': ['pasta', 'riso', 'pelati', 'scatola', 'zucchero', 'sale', 'spaghetti', 'penne'],
-            'Olio/Condimenti': ['olio', 'aceto', 'maionese', 'ketchup', 'senape', 'salsa'],
-            'Farina/Cereali': ['farina', 'semola', 'lievito', 'amido'],
-            'Pane/Forno': ['pane', 'focaccia', 'panino', 'pancarrè', 'grissini']
+        // Configurazione Firebase (Sostituisci i dati se necessario)
+        const firebaseConfig = {
+            databaseURL: "https://uzzo-ristorante-default-rtdb.europe-west1.firebasedatabase.app"
         };
 
-        function detectCategory(text, fallbackCat) {
-            let lowerText = text.toLowerCase();
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-            for (let c of categorieObj) {
-                if (lowerText.startsWith(c.nome.toLowerCase() + '-') || 
-                    lowerText.startsWith(c.nome.toLowerCase() + ':') ||
-                    lowerText.includes('[' + c.nome.toLowerCase() + ']')) {
-                    return c.nome;
-                }
-            }
+        // STATO APPLICAZIONE
+        window.catalog = [];
+        window.suppliers = [];
+        window.cart = {};
 
-            for (let catName in keywordsMap) {
-                let match = keywordsMap[catName].some(kw => lowerText.includes(kw));
-                if (match) {
-                    let existingCat = categorieObj.find(c => c.nome.toLowerCase().includes(catName.toLowerCase()) || catName.toLowerCase().includes(c.nome.toLowerCase()));
-                    if (existingCat) return existingCat.nome;
-                }
-            }
+        // SINCRONIZZAZIONE DATABASE
+        onValue(ref(db, 'catalog'), (snapshot) => {
+            const data = snapshot.val();
+            window.catalog = data ? Object.keys(data).map(k => ({id: k, ...data[k]})) : [];
+            renderCatalog();
+        });
 
-            return fallbackCat;
-        }
+        onValue(ref(db, 'suppliers'), (snapshot) => {
+            const data = snapshot.val();
+            window.suppliers = data ? Object.keys(data).map(k => ({id: k, ...data[k]})) : [];
+            renderSuppliers();
+            updateSupplierSelects();
+        });
 
-        function getCatIcon(catName) {
-            let found = categorieObj.find(c => c.nome === catName);
-            return found ? found.icon : '🛒';
-        }
+        // ESPORTA FUNZIONI GLOBALI
+        window.saveNewItem = function() {
+            const name = document.getElementById('item-name-input').value.trim();
+            const category = document.getElementById('item-category-input').value;
+            const supplier = document.getElementById('item-supplier-input').value;
+            const unit = document.getElementById('item-unit-input').value.trim() || 'Pz';
 
-        function parsePrice(val) {
-            if (!val) return 0;
-            let num = parseFloat(String(val).replace(',', '.'));
-            return isNaN(num) ? 0 : num;
-        }
+            if(!name) return alert('Inserisci il nome articolo');
 
-        function saveData() {
-            localStorage.setItem('savino_categorie_obj', JSON.stringify(categorieObj));
-            localStorage.setItem('savino_fornitori', JSON.stringify(fornitori));
-            localStorage.setItem('savino_prodotti', JSON.stringify(prodotti));
-            localStorage.setItem('savino_carrello', JSON.stringify(carrello));
-            updateHeaderTotal();
-        }
+            const newItemRef = push(ref(db, 'catalog'));
+            set(newItemRef, { name, category, supplier, unit });
+            closeModal('modal-item');
+            document.getElementById('item-name-input').value = '';
+        };
 
-        function switchTab(tabId, ev) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        window.saveNewSupplier = function() {
+            const name = document.getElementById('sup-name-input').value.trim();
+            const phone = document.getElementById('sup-phone-input').value.trim();
+
+            if(!name) return alert('Inserisci il nome del fornitore');
+
+            const newSupRef = push(ref(db, 'suppliers'));
+            set(newSupRef, { name, phone });
+            closeModal('modal-supplier');
+            document.getElementById('sup-name-input').value = '';
+            document.getElementById('sup-phone-input').value = '';
+        };
+    </script>
+
+    <script>
+        // NAVIGAZIONE
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            
             document.getElementById(tabId).classList.add('active');
-            if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
-            if (tabId === 'tab-ordini') renderOrdini();
-            if (tabId === 'tab-fornitori') renderInvio();
-            if (tabId === 'tab-indice') renderIndice();
-            if (tabId === 'tab-gestione') renderGestione();
+            
+            const items = document.querySelectorAll('.nav-item');
+            if(tabId === 'tab-home') items[0].classList.add('active');
+            if(tabId === 'tab-ordini') items[1].classList.add('active');
+            if(tabId === 'tab-catalogo') items[2].classList.add('active');
+            if(tabId === 'tab-fornitori') items[3].classList.add('active');
         }
 
-        function updateHeaderTotal() {
-            let tot = 0;
-            for (let id in carrello) {
-                let p = prodotti.find(x => x.id === id);
-                if (p) tot += carrello[id] * p.prezzo;
-            }
-            let el = document.getElementById('header-tot');
-            el.innerText = `Tot: €${tot.toFixed(2)}`;
-            el.classList.add('bounce');
-            setTimeout(() => el.classList.remove('bounce'), 200);
-        }
+        // GESTIONE MODALI
+        function openNewItemModal() { document.getElementById('modal-item').classList.add('active'); }
+        function openNewSupplierModal() { document.getElementById('modal-supplier').classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        function renderOrdini() {
-            if (!categorieObj.some(c => c.nome === currentCat)) {
-                currentCat = categorieObj[0]?.nome || 'Altro';
-            }
-
-            let catGrid = document.getElementById('cat-grid');
-            catGrid.innerHTML = '';
-            categorieObj.forEach(c => {
-                let btn = document.createElement('div');
-                btn.className = `grid-btn ${c.nome === currentCat ? 'selected' : ''}`;
-                btn.innerText = `${c.icon} ${c.nome}`;
-                btn.onclick = () => { currentCat = c.nome; renderOrdini(); };
-                catGrid.appendChild(btn);
-            });
-
-            let prodList = document.getElementById('prod-list');
-            prodList.innerHTML = '';
-            let filtered = prodotti.filter(p => p.cat === currentCat);
-
-            if (filtered.length === 0) {
-                prodList.innerHTML = '<p style="font-size:13px; color:#9ca3af; padding:10px 0;">Nessun prodotto presente in questa categoria.</p>';
-                return;
-            }
-
-            filtered.forEach(p => {
-                let qty = carrello[p.id] || 0;
-                let item = document.createElement('div');
-                item.className = 'product-item';
-                item.innerHTML = `
-                    <div>
-                        <strong style="font-size:14px; color:#f3f4f6;">${p.nome}</strong>
-                        <div style="font-size:12px; color:#9ca3af; font-weight:500;">€${p.prezzo.toFixed(2)} / ${p.unita}</div>
-                    </div>
-                    <div class="qty-controls">
-                        <button class="qty-btn" onclick="updateQty('${p.id}', -1)">-</button>
-                        <span class="qty-val">${qty}</span>
-                        <button class="qty-btn" onclick="updateQty('${p.id}', 1)">+</button>
-                    </div>
-                `;
-                prodList.appendChild(item);
-            });
-        }
-
-        function updateQty(prodId, delta) {
-            let current = carrello[prodId] || 0;
-            let next = current + delta;
-            if (next <= 0) delete carrello[prodId];
-            else carrello[prodId] = next;
-            saveData();
-            renderOrdini();
-        }
-
-        function renderInvio() {
-            let container = document.getElementById('summary-fornitori');
-            container.innerHTML = '';
-            let grouped = {};
-            for (let id in carrello) {
-                let p = prodotti.find(x => x.id === id);
-                if (p) {
-                    if (!grouped[p.fornitoreId]) grouped[p.fornitoreId] = [];
-                    grouped[p.fornitoreId].push({ prod: p, qty: carrello[id] });
-                }
-            }
-
-            if (Object.keys(grouped).length === 0) {
-                container.innerHTML = '<p style="font-size:13px; color:#9ca3af;">Nessun ordine nel carrello.</p>';
-                return;
-            }
-
-            for (let fId in grouped) {
-                let fObj = fornitori.find(x => x.id === fId) || { nome: 'Fornitore', tel: '' };
-                let items = grouped[fId];
-                let subtot = 0;
-                let textMsg = `*ORDINE UZZO CHEF*\n\n`;
-
-                let card = document.createElement('div');
-                card.className = 'card';
-                let html = `<div class="card-title">🚚 ${fObj.nome}</div><ul style="margin-bottom:12px; font-size:13px; list-style:none;">`;
-
-                items.forEach(i => {
-                    let cost = i.qty * i.prod.prezzo;
-                    subtot += cost;
-                    html += `<li style="padding:5px 0; border-bottom:1px solid #3a3b3c; color:#f3f4f6;">${i.prod.nome}: <strong>${i.qty} ${i.prod.unita}</strong> (€${cost.toFixed(2)})</li>`;
-                    textMsg += `• ${i.prod.nome}: ${i.qty} ${i.prod.unita}\n`;
+        // RENDER SUPP-SELECT
+        function updateSupplierSelects() {
+            const selects = [document.getElementById('supplier-select'), document.getElementById('item-supplier-input')];
+            selects.forEach(sel => {
+                if(!sel) return;
+                sel.innerHTML = '<option value="">-- Seleziona Fornitore --</option>';
+                (window.suppliers || []).forEach(s => {
+                    sel.innerHTML += `<option value="${s.name}">${s.name}</option>`;
                 });
-
-                textMsg += `\n*Totale: €${subtot.toFixed(2)}*`;
-                html += `</ul><div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong style="color:#a3b18a;">Totale: €${subtot.toFixed(2)}</strong>
-                            <button class="btn btn-whatsapp" onclick="window.open('https://wa.me/${fObj.tel}?text=${encodeURIComponent(textMsg)}', '_blank')">💬 WhatsApp</button>
-                         </div>`;
-                card.innerHTML = html;
-                container.appendChild(card);
-            }
+            });
         }
 
-        function renderIndice() {
-            let container = document.getElementById('indice-container');
-            container.innerHTML = '';
+        // RENDER CATALOGO PER FORNITORE
+        function renderCatalog() {
+            const list = document.getElementById('catalog-accordion-list');
+            if(!list) return;
+            list.innerHTML = '';
 
-            if (fornitori.length === 0) {
-                container.innerHTML = '<p style="font-size:13px; color:#9ca3af;">Nessun fornitore registrato.</p>';
-                return;
-            }
+            const grouped = {};
+            (window.catalog || []).forEach(item => {
+                const sup = item.supplier || 'Senza Fornitore';
+                if(!grouped[sup]) grouped[sup] = [];
+                grouped[sup].push(item);
+            });
 
-            fornitori.forEach(f => {
-                let prodsFornitore = prodotti.filter(p => p.fornitoreId === f.id);
-                let card = document.createElement('div');
-                card.className = 'card';
+            Object.keys(grouped).forEach(supName => {
+                const header = document.createElement('div');
+                header.className = 'accordion-header';
+                header.innerHTML = `<span>🚚 ${supName} (${grouped[supName].length})</span> <span>▼</span>`;
+                
+                const content = document.createElement('div');
+                content.className = 'accordion-content';
 
-                let html = `<div class="card-title-collapsible" onclick="toggleCollapsible('body-${f.id}', 'arrow-${f.id}')">
-                                <span>🚚 ${f.nome} <span style="font-size:11px; font-weight:normal; color:#9ca3af;">(${prodsFornitore.length} prodotti)</span></span>
-                                <span id="arrow-${f.id}" class="arrow-icon">▼</span>
+                grouped[supName].forEach(item => {
+                    content.innerHTML += `
+                        <div class="item-card" style="margin-bottom:6px;">
+                            <div class="item-info">
+                                <span class="item-name">${item.name}</span>
+                                <span class="item-sub">${item.category} • ${item.unit}</span>
                             </div>
-                            <div id="body-${f.id}" class="collapsible-body">`;
-
-                if (prodsFornitore.length === 0) {
-                    html += `<p style="font-size:12px; color:#9ca3af; font-style:italic; padding-top:6px;">Nessun prodotto associato.</p>`;
-                } else {
-                    html += `<table class="catalog-table">
-                                <thead>
-                                    <tr>
-                                        <th>Prodotto</th>
-                                        <th>Cat.</th>
-                                        <th>Unità</th>
-                                        <th style="text-align:right;">Prezzo</th>
-                                        <th style="text-align:right;">Azioni</th>
-                                    </tr>
-                                </thead>
-                                <tbody>`;
-                    prodsFornitore.forEach(p => {
-                        html += `<tr>
-                                    <td><strong>${p.nome}</strong></td>
-                                    <td>${getCatIcon(p.cat)}</td>
-                                    <td>${p.unita}</td>
-                                    <td style="text-align:right; font-weight:bold; color:#a3b18a;">€${p.prezzo.toFixed(2)}</td>
-                                    <td class="actions-cell">
-                                        <button class="btn btn-warning btn-sm" onclick="editProdotto('${p.id}')">✏️</button>
-                                        <button class="btn btn-danger btn-sm" onclick="deleteProdotto('${p.id}')">🗑️️</button>
-                                    </td>
-                                 </tr>`;
-                    });
-                    html += `</tbody></table>`;
-                }
-
-                html += `</div>`;
-                card.innerHTML = html;
-                container.appendChild(card);
-            });
-        }
-
-        function toggleCollapsible(bodyId, arrowId) {
-            let body = document.getElementById(bodyId);
-            let arrow = document.getElementById(arrowId);
-            if (body.classList.contains('collapsed')) {
-                body.classList.remove('collapsed');
-                arrow.classList.remove('rotated');
-            } else {
-                body.classList.add('collapsed');
-                arrow.classList.add('rotated');
-            }
-        }
-
-        function editProdotto(prodId) {
-            let p = prodotti.find(x => x.id === prodId);
-            if (!p) return;
-
-            let nuovoNome = prompt("Nome del prodotto:", p.nome);
-            if (nuovoNome === null) return;
-
-            let nuovoPrezzo = prompt("Prezzo (€):", p.prezzo);
-            if (nuovoPrezzo === null) return;
-
-            let nuovaUnita = prompt("Unità di misura (es. kg, pz, cassa):", p.unita);
-            if (nuovaUnita === null) return;
-
-            p.nome = nuovoNome.trim() || p.nome;
-            p.prezzo = parsePrice(nuovoPrezzo);
-            p.unita = nuovaUnita.trim() || p.unita;
-
-            saveData();
-            renderIndice();
-            renderOrdini();
-        }
-
-        function deleteProdotto(prodId) {
-            let p = prodotti.find(x => x.id === prodId);
-            if (!p) return;
-
-            if (confirm(`Vuoi cancellare definitivamente "${p.nome}" dal catalogo?`)) {
-                prodotti = prodotti.filter(x => x.id !== prodId);
-                delete carrello[prodId];
-                saveData();
-                renderIndice();
-                renderOrdini();
-            }
-        }
-
-        function exportToExcel() {
-            if (prodotti.length === 0) {
-                alert("Nessun prodotto da esportare.");
-                return;
-            }
-
-            let exportData = prodotti.map(p => {
-                let fObj = fornitori.find(f => f.id === p.fornitoreId);
-                return {
-                    'Fornitore': fObj ? fObj.nome : 'Non specificato',
-                    'Prodotto': p.nome,
-                    'Categoria': p.cat,
-                    'Unità di Misura': p.unita,
-                    'Prezzo (€)': p.prezzo
-                };
-            });
-
-            let worksheet = XLSX.utils.json_to_sheet(exportData);
-            let workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Catalogo Uzzo Chef");
-            XLSX.writeFile(workbook, "Catalogo_Fornitori_UzzoChef.xlsx");
-        }
-
-        function renderGestione() {
-            let fSelect1 = document.getElementById('new-prod-fornitore');
-            let fSelect2 = document.getElementById('bulk-prod-fornitore');
-            fSelect1.innerHTML = '';
-            fSelect2.innerHTML = '';
-            fornitori.forEach(f => {
-                fSelect1.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
-                fSelect2.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
-            });
-
-            let cSelect1 = document.getElementById('new-prod-cat');
-            let cSelect2 = document.getElementById('bulk-prod-cat');
-            cSelect1.innerHTML = '';
-            cSelect2.innerHTML = '';
-            categorieObj.forEach(c => {
-                cSelect1.innerHTML += `<option value="${c.nome}">${c.icon} ${c.nome}</option>`;
-                cSelect2.innerHTML += `<option value="${c.nome}">${c.icon} ${c.nome}</option>`;
-            });
-
-            let catContainer = document.getElementById('categories-list-container');
-            catContainer.innerHTML = '';
-            categorieObj.forEach((c, idx) => {
-                let tag = document.createElement('div');
-                tag.className = 'cat-tag';
-                tag.innerHTML = `<span>${c.icon} ${c.nome}</span> <button class="btn btn-danger btn-sm" style="margin-left:6px; padding:2px 5px;" onclick="deleteCategoria(${idx})">✕</button>`;
-                catContainer.appendChild(tag);
-            });
-
-            let fornitoriContainer = document.getElementById('fornitori-list-container');
-            fornitoriContainer.innerHTML = '';
-            if (fornitori.length === 0) {
-                fornitoriContainer.innerHTML = '<p style="font-size:12px; color:#9ca3af;">Nessun fornitore registrato.</p>';
-            } else {
-                fornitori.forEach(f => {
-                    let item = document.createElement('div');
-                    item.className = 'supplier-item';
-                    item.innerHTML = `
-                        <div class="supplier-info">
-                            <strong>🚚 ${f.nome}</strong>
-                            <span>📞 ${f.tel || 'Nessun numero'}</span>
-                        </div>
-                        <div>
-                            <button class="btn btn-danger btn-sm" onclick="deleteFornitore('${f.id}')">🗑️️ Cancella</button>
+                            <div class="item-actions">
+                                <button class="qty-btn" onclick="addToCart('${item.id}', '${item.name}', '${item.unit}', '${item.supplier}')">➕</button>
+                            </div>
                         </div>
                     `;
-                    fornitoriContainer.appendChild(item);
                 });
-            }
+
+                header.onclick = () => content.classList.toggle('open');
+                list.appendChild(header);
+                list.appendChild(content);
+            });
         }
 
-        function addCategoria() {
-            let icon = document.getElementById('new-cat-icon').value;
-            let nome = document.getElementById('new-cat-nome').value.trim();
-            if (!nome) return alert("Inserisci il nome della categoria");
-            if (categorieObj.some(c => c.nome.toLowerCase() === nome.toLowerCase())) {
-                return alert("Categoria già esistente");
+        // RENDER FORNITORI
+        function renderSuppliers() {
+            const list = document.getElementById('suppliers-list');
+            if(!list) return;
+            list.innerHTML = '';
+
+            (window.suppliers || []).forEach(s => {
+                list.innerHTML += `
+                    <div class="item-card">
+                        <div class="item-info">
+                            <span class="item-name">${s.name}</span>
+                            <span class="item-sub">${s.phone || 'Nessun numero'}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // CARRELLO E ORDINI
+        function addToCart(id, name, unit, supplier) {
+            if(!window.cart[id]) {
+                window.cart[id] = { id, name, unit, supplier, qty: 1 };
+            } else {
+                window.cart[id].qty++;
             }
+            renderCart();
+            alert(`Aggiunto: ${name}`);
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-list');
+            if(!container) return;
             
-            categorieObj.push({ icon, nome });
-            saveData();
-            document.getElementById('new-cat-nome').value = '';
-            renderGestione();
-            renderOrdini();
-        }
-
-        function deleteCategoria(idx) {
-            if (categorieObj.length <= 1) {
-                return alert("Devi mantenere almeno una categoria.");
-            }
-            let catName = categorieObj[idx].nome;
-            if (confirm(`Eliminare la categoria "${catName}"?`)) {
-                categorieObj.splice(idx, 1);
-                if (currentCat === catName) {
-                    currentCat = categorieObj[0].nome;
-                }
-                saveData();
-                renderGestione();
-                renderOrdini();
-            }
-        }
-
-        function addFornitore() {
-            let nome = document.getElementById('new-fornitore-nome').value.trim();
-            let tel = document.getElementById('new-fornitore-tel').value.trim();
-            if (!nome) return alert('Inserisci il nome del fornitore');
-            fornitori.push({ id: 'f_' + Date.now(), nome, tel });
-            saveData();
-            document.getElementById('new-fornitore-nome').value = '';
-            document.getElementById('new-fornitore-tel').value = '';
-            renderGestione();
-        }
-
-        function deleteFornitore(fId) {
-            let fObj = fornitori.find(f => f.id === fId);
-            if (!fObj) return;
-
-            let countProds = prodotti.filter(p => p.fornitoreId === fId).length;
-            let msg = `Vuoi cancellare il fornitore "${fObj.nome}"?`;
-            if (countProds > 0) {
-                msg += `\nATTENZIONE: Verranno eliminati anche i ${countProds} prodotti associati a questo fornitore!`;
-            }
-
-            if (confirm(msg)) {
-                fornitori = fornitori.filter(f => f.id !== fId);
-                let deletedProdIds = prodotti.filter(p => p.fornitoreId === fId).map(p => p.id);
-                prodotti = prodotti.filter(p => p.fornitoreId !== fId);
-                deletedProdIds.forEach(pId => delete carrello[pId]);
-
-                saveData();
-                renderGestione();
-                renderOrdini();
-                renderIndice();
-            }
-        }
-
-        function addProdotto() {
-            let nome = document.getElementById('new-prod-nome').value.trim();
-            let cat = document.getElementById('new-prod-cat').value;
-            let fornitoreId = document.getElementById('new-prod-fornitore').value;
-            let unita = document.getElementById('new-prod-unita').value.trim() || 'kg';
-            let prezzo = parsePrice(document.getElementById('new-prod-prezzo').value);
-
-            if (!nome) return alert('Inserisci il nome del prodotto');
-            prodotti.push({ id: 'p_' + Date.now(), nome, cat, fornitoreId, unita, prezzo });
-            saveData();
-            document.getElementById('new-prod-nome').value = '';
-            document.getElementById('new-prod-prezzo').value = '';
-            renderOrdini();
-            alert('Prodotto aggiunto!');
-        }
-
-        function addBulkProducts() {
-            let text = document.getElementById('bulk-text-input').value.trim();
-            let fornitoreId = document.getElementById('bulk-prod-fornitore').value;
-            let fallbackCat = document.getElementById('bulk-prod-cat').value;
-
-            if (!text) {
-                alert('Incolla almeno una riga di testo.');
+            const keys = Object.keys(window.cart);
+            if(keys.length === 0) {
+                container.innerHTML = '<p style="color:#9ca3af; text-align:center; padding:20px;">Nessun articolo selezionato.</p>';
                 return;
             }
 
-            let lines = text.split('\n');
-            let addedCount = 0;
-
-            lines.forEach(line => {
-                let trimmed = line.trim();
-                if (!trimmed) return;
-
-                let assignedCat = detectCategory(trimmed, fallbackCat);
-                let cleanLine = trimmed.replace(new RegExp('^' + assignedCat + '[\\s:-]+', 'i'), '');
-
-                let priceMatch = cleanLine.match(/(\d+[.,]?\d*)\s*(€|euro)?$/i) || cleanLine.match(/(\d+[.,]\d+)/);
-                let price = 0;
-                let name = cleanLine;
-                let unita = 'kg';
-
-                if (priceMatch) {
-                    price = parsePrice(priceMatch[1]);
-                    name = cleanLine.replace(priceMatch[0], '').trim();
-                }
-
-                if (/\b(kg|chili|chilogrammi)\b/i.test(name)) {
-                    unita = 'kg';
-                    name = name.replace(/\b(kg|chili|chilogrammi)\b/gi, '').trim();
-                } else if (/\b(gr|grammi)\b/i.test(name)) {
-                    unita = 'gr';
-                    name = name.replace(/\b(gr|grammi)\b/gi, '').trim();
-                } else if (/\b(lt|litri)\b/i.test(name)) {
-                    unita = 'lt';
-                    name = name.replace(/\b(lt|litri)\b/gi, '').trim();
-                } else if (/\b(pz|pezzi|cassa|bottiglia|btt)\b/i.test(name)) {
-                    unita = 'pz';
-                    name = name.replace(/\b(pz|pezzi|cassa|bottiglia|btt)\b/gi, '').trim();
-                }
-
-                name = name.replace(/[-:,]+$/, '').trim();
-
-                if (name) {
-                    prodotti.push({
-                        id: 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-                        nome: name,
-                        cat: assignedCat,
-                        fornitoreId: fornitoreId,
-                        unita: unita,
-                        prezzo: price
-                    });
-                    addedCount++;
-                }
+            container.innerHTML = '';
+            keys.forEach(k => {
+                const item = window.cart[k];
+                container.innerHTML += `
+                    <div class="item-card">
+                        <div class="item-info">
+                            <span class="item-name">${item.name}</span>
+                            <span class="item-sub">${item.supplier}</span>
+                        </div>
+                        <div class="item-actions">
+                            <button class="qty-btn" onclick="updateQty('${k}', -1)">-</button>
+                            <span class="qty-display">${item.qty}</span>
+                            <button class="qty-btn" onclick="updateQty('${k}', 1)">+</button>
+                        </div>
+                    </div>
+                `;
             });
+        }
 
-            if (addedCount > 0) {
-                saveData();
-                document.getElementById('bulk-text-input').value = '';
-                alert(`Smistati e aggiunti con successo ${addedCount} prodotti!`);
-                renderOrdini();
-            } else {
-                alert('Nessun prodotto valido trovato nel testo.');
+        function updateQty(id, change) {
+            if(window.cart[id]) {
+                window.cart[id].qty += change;
+                if(window.cart[id].qty <= 0) delete window.cart[id];
+                renderCart();
             }
         }
 
-        saveData();
-        renderOrdini();
+        function clearCart() {
+            window.cart = {};
+            renderCart();
+        }
+
+        // INVIA ORDINE WHATSAPP
+        function sendWhatsAppOrder() {
+            const selectedSupplier = document.getElementById('supplier-select').value;
+            const keys = Object.keys(window.cart);
+
+            if(keys.length === 0) return alert('Il carrello è vuoto!');
+            if(!selectedSupplier) return alert('Seleziona un fornitore per l\'invio');
+
+            const supplierObj = (window.suppliers || []).find(s => s.name === selectedSupplier);
+            let phone = supplierObj ? supplierObj.phone : '';
+
+            let text = `*ORDINE UZZO CHEF*\nFornitore: *${selectedSupplier}*\n--------------------\n`;
+            
+            keys.forEach(k => {
+                const item = window.cart[k];
+                if(!selectedSupplier || item.supplier === selectedSupplier) {
+                    text += `• ${item.name}: *${item.qty} ${item.unit}*\n`;
+                }
+            });
+
+            text += `\nSi prega di confermare la ricezione. Grazie!`;
+
+            const encodedText = encodeURIComponent(text);
+            const url = phone ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodedText}` : `https://wa.me/?text=${encodedText}`;
+            window.open(url, '_blank');
+        }
+
+        // ESPORTA IN EXCEL
+        function exportCatalogExcel() {
+            if(!window.catalog || window.catalog.length === 0) return alert('Nessun articolo nel catalogo');
+            
+            const data = window.catalog.map(i => ({
+                "Nome Articolo": i.name,
+                "Categoria": i.category,
+                "Fornitore": i.supplier,
+                "Unità": i.unit
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Catalogo");
+            XLSX.writeFile(wb, "Catalogo_Uzzo_Chef.xlsx");
+        }
+
+        // IMPORTAZIONE TESTO
+        function importItemsText() {
+            const text = document.getElementById('import-text').value.trim();
+            if(!text) return alert('Incolla del testo per importare');
+
+            const lines = text.split('\n');
+            lines.forEach(line => {
+                if(line.trim()) {
+                    const id = 'imp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                    window.cart[id] = { id, name: line.trim(), unit: 'Pz', supplier: 'Generico', qty: 1 };
+                }
+            });
+
+            document.getElementById('import-text').value = '';
+            alert('Articoli importati nel carrello!');
+            switchTab('tab-ordini');
+            renderCart();
+        }
     </script>
 </body>
 </html>
