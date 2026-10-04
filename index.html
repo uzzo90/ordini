@@ -408,7 +408,7 @@
                 <div class="brand-subtitle">Gestione Ordini</div>
             </div>
         </div>
-        <div class="status-badge">
+        <div class="status-badge" id="net-status">
             <span class="status-dot"></span> Online
         </div>
     </header>
@@ -419,39 +419,39 @@
         <!-- SCHEDA 1: HOME / CATEGORIE -->
         <div id="tab-home" class="tab-content active">
             <div class="categories-grid">
-                <div class="category-card" onclick="openCategory('Carne')">
+                <div class="category-card" onclick="filterCategoryTab('Carne')">
                     <span class="icon">🥩</span>
                     <span class="title">Carne</span>
                     <span class="badge" id="badge-Carne">0</span>
                 </div>
-                <div class="category-card" onclick="openCategory('Pesce')">
+                <div class="category-card" onclick="filterCategoryTab('Pesce')">
                     <span class="icon">🐟</span>
                     <span class="title">Pesce</span>
                     <span class="badge" id="badge-Pesce">0</span>
                 </div>
-                <div class="category-card" onclick="openCategory('Ortofrutta')">
+                <div class="category-card" onclick="filterCategoryTab('Ortofrutta')">
                     <span class="icon">🥬</span>
                     <span class="title">Ortofrutta</span>
                     <span class="badge" id="badge-Ortofrutta">0</span>
                 </div>
-                <div class="category-card" onclick="openCategory('Latticini')">
+                <div class="category-card" onclick="filterCategoryTab('Latticini')">
                     <span class="icon">🧀</span>
                     <span class="title">Latticini</span>
                     <span class="badge" id="badge-Latticini">0</span>
                 </div>
-                <div class="category-card" onclick="openCategory('Dispensa')">
+                <div class="category-card" onclick="filterCategoryTab('Dispensa')">
                     <span class="icon">📦</span>
                     <span class="title">Dispensa</span>
                     <span class="badge" id="badge-Dispensa">0</span>
                 </div>
-                <div class="category-card" onclick="openCategory('Bevande')">
+                <div class="category-card" onclick="filterCategoryTab('Bevande')">
                     <span class="icon">🍷</span>
                     <span class="title">Bevande</span>
                     <span class="badge" id="badge-Bevande">0</span>
                 </div>
             </div>
 
-            <!-- RICERCA E IMPORTAZIONE VELOCE -->
+            <!-- IMPORTAZIONE VELOCE -->
             <div class="import-box">
                 <label style="font-size:12px; color:#9ca3af; display:block; margin-bottom:6px;">⚡ Importazione Rapida (Incolla testo o lista AI)</label>
                 <textarea id="import-text" placeholder="Es: 2kg Farina 00, 3 cassette Pomodori, 5L Olio EVO..."></textarea>
@@ -485,13 +485,13 @@
             </div>
 
             <div class="search-box">
-                <input type="text" id="catalog-search" placeholder="🔍 Cerca articolo nel catalogo..." oninput="filterCatalog()">
+                <input type="text" id="catalog-search" placeholder="🔍 Cerca articolo nel catalogo..." oninput="renderCatalog()">
             </div>
 
             <button class="btn" onclick="openNewItemModal()">➕ Aggiungi Nuovo Articolo</button>
 
             <div id="catalog-accordion-list">
-                <!-- Sezioni generate dinamicamente per fornitore -->
+                <!-- Sezioni generate dinamicamente -->
             </div>
         </div>
 
@@ -585,7 +585,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Configurazione Firebase (Sostituisci i dati se necessario)
+        // CONFIGURAZIONE FIREBASE DALLA TUA CONSOLE UZZO-RISTORANTE
         const firebaseConfig = {
             databaseURL: "https://uzzo-ristorante-default-rtdb.europe-west1.firebasedatabase.app"
         };
@@ -593,18 +593,18 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // STATO APPLICAZIONE
         window.catalog = [];
         window.suppliers = [];
         window.cart = {};
 
-        // SINCRONIZZAZIONE DATABASE
+        // Sincronizzazione Catalogo
         onValue(ref(db, 'catalog'), (snapshot) => {
             const data = snapshot.val();
             window.catalog = data ? Object.keys(data).map(k => ({id: k, ...data[k]})) : [];
             renderCatalog();
         });
 
+        // Sincronizzazione Fornitori
         onValue(ref(db, 'suppliers'), (snapshot) => {
             const data = snapshot.val();
             window.suppliers = data ? Object.keys(data).map(k => ({id: k, ...data[k]})) : [];
@@ -612,14 +612,13 @@
             updateSupplierSelects();
         });
 
-        // ESPORTA FUNZIONI GLOBALI
         window.saveNewItem = function() {
             const name = document.getElementById('item-name-input').value.trim();
             const category = document.getElementById('item-category-input').value;
             const supplier = document.getElementById('item-supplier-input').value;
             const unit = document.getElementById('item-unit-input').value.trim() || 'Pz';
 
-            if(!name) return alert('Inserisci il nome articolo');
+            if(!name) return alert('Inserisci il nome dell\'articolo');
 
             const newItemRef = push(ref(db, 'catalog'));
             set(newItemRef, { name, category, supplier, unit });
@@ -639,10 +638,21 @@
             document.getElementById('sup-name-input').value = '';
             document.getElementById('sup-phone-input').value = '';
         };
+
+        window.deleteSupplier = function(id) {
+            if(confirm('Cancellare questo fornitore?')) {
+                remove(ref(db, 'suppliers/' + id));
+            }
+        };
+
+        window.deleteCatalogItem = function(id) {
+            if(confirm('Cancellare questo articolo dal catalogo?')) {
+                remove(ref(db, 'catalog/' + id));
+            }
+        };
     </script>
 
     <script>
-        // NAVIGAZIONE
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
@@ -656,35 +666,55 @@
             if(tabId === 'tab-fornitori') items[3].classList.add('active');
         }
 
-        // GESTIONE MODALI
+        function filterCategoryTab(cat) {
+            switchTab('tab-catalogo');
+            const searchInput = document.getElementById('catalog-search');
+            if(searchInput) {
+                searchInput.value = cat;
+                renderCatalog();
+            }
+        }
+
         function openNewItemModal() { document.getElementById('modal-item').classList.add('active'); }
         function openNewSupplierModal() { document.getElementById('modal-supplier').classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        // RENDER SUPP-SELECT
         function updateSupplierSelects() {
             const selects = [document.getElementById('supplier-select'), document.getElementById('item-supplier-input')];
             selects.forEach(sel => {
                 if(!sel) return;
+                const current = sel.value;
                 sel.innerHTML = '<option value="">-- Seleziona Fornitore --</option>';
                 (window.suppliers || []).forEach(s => {
                     sel.innerHTML += `<option value="${s.name}">${s.name}</option>`;
                 });
+                sel.value = current;
             });
         }
 
-        // RENDER CATALOGO PER FORNITORE
         function renderCatalog() {
             const list = document.getElementById('catalog-accordion-list');
+            const search = (document.getElementById('catalog-search')?.value || '').toLowerCase();
             if(!list) return;
             list.innerHTML = '';
 
+            const filtered = (window.catalog || []).filter(item => 
+                item.name.toLowerCase().includes(search) || 
+                (item.category && item.category.toLowerCase().includes(search)) ||
+                (item.supplier && item.supplier.toLowerCase().includes(search))
+            );
+
             const grouped = {};
-            (window.catalog || []).forEach(item => {
+            filtered.forEach(item => {
                 const sup = item.supplier || 'Senza Fornitore';
                 if(!grouped[sup]) grouped[sup] = [];
                 grouped[sup].push(item);
             });
+
+            if(Object.keys(grouped).length === 0) {
+                list.innerHTML = '<p style="color:#9ca3af; text-align:center; padding:20px;">Nessun articolo trovato.</p>';
+                return;
+            }
 
             Object.keys(grouped).forEach(supName => {
                 const header = document.createElement('div');
@@ -692,7 +722,7 @@
                 header.innerHTML = `<span>🚚 ${supName} (${grouped[supName].length})</span> <span>▼</span>`;
                 
                 const content = document.createElement('div');
-                content.className = 'accordion-content';
+                content.className = 'accordion-content open';
 
                 grouped[supName].forEach(item => {
                     content.innerHTML += `
@@ -703,6 +733,7 @@
                             </div>
                             <div class="item-actions">
                                 <button class="qty-btn" onclick="addToCart('${item.id}', '${item.name}', '${item.unit}', '${item.supplier}')">➕</button>
+                                <button class="qty-btn" style="background:#ef4444;" onclick="deleteCatalogItem('${item.id}')">🗑️</button>
                             </div>
                         </div>
                     `;
@@ -714,11 +745,15 @@
             });
         }
 
-        // RENDER FORNITORI
         function renderSuppliers() {
             const list = document.getElementById('suppliers-list');
             if(!list) return;
             list.innerHTML = '';
+
+            if((window.suppliers || []).length === 0) {
+                list.innerHTML = '<p style="color:#9ca3af; text-align:center; padding:20px;">Nessun fornitore registrato.</p>';
+                return;
+            }
 
             (window.suppliers || []).forEach(s => {
                 list.innerHTML += `
@@ -727,12 +762,14 @@
                             <span class="item-name">${s.name}</span>
                             <span class="item-sub">${s.phone || 'Nessun numero'}</span>
                         </div>
+                        <div class="item-actions">
+                            <button class="qty-btn" style="background:#ef4444;" onclick="deleteSupplier('${s.id}')">🗑️</button>
+                        </div>
                     </div>
                 `;
             });
         }
 
-        // CARRELLO E ORDINI
         function addToCart(id, name, unit, supplier) {
             if(!window.cart[id]) {
                 window.cart[id] = { id, name, unit, supplier, qty: 1 };
@@ -740,6 +777,7 @@
                 window.cart[id].qty++;
             }
             renderCart();
+            updateBadges();
             alert(`Aggiunto: ${name}`);
         }
 
@@ -760,7 +798,7 @@
                     <div class="item-card">
                         <div class="item-info">
                             <span class="item-name">${item.name}</span>
-                            <span class="item-sub">${item.supplier}</span>
+                            <span class="item-sub">${item.supplier || 'Generico'}</span>
                         </div>
                         <div class="item-actions">
                             <button class="qty-btn" onclick="updateQty('${k}', -1)">-</button>
@@ -777,15 +815,36 @@
                 window.cart[id].qty += change;
                 if(window.cart[id].qty <= 0) delete window.cart[id];
                 renderCart();
+                updateBadges();
             }
         }
 
         function clearCart() {
             window.cart = {};
             renderCart();
+            updateBadges();
         }
 
-        // INVIA ORDINE WHATSAPP
+        function updateBadges() {
+            const counts = {};
+            Object.values(window.cart).forEach(item => {
+                const cat = item.category || 'Dispensa';
+                counts[cat] = (counts[cat] || 0) + item.qty;
+            });
+
+            ['Carne', 'Pesce', 'Ortofrutta', 'Latticini', 'Dispensa', 'Bevande'].forEach(cat => {
+                const b = document.getElementById(`badge-${cat}`);
+                if(b) {
+                    if(counts[cat]) {
+                        b.innerText = counts[cat];
+                        b.classList.add('active');
+                    } else {
+                        b.classList.remove('active');
+                    }
+                }
+            });
+        }
+
         function sendWhatsAppOrder() {
             const selectedSupplier = document.getElementById('supplier-select').value;
             const keys = Object.keys(window.cart);
@@ -812,7 +871,6 @@
             window.open(url, '_blank');
         }
 
-        // ESPORTA IN EXCEL
         function exportCatalogExcel() {
             if(!window.catalog || window.catalog.length === 0) return alert('Nessun articolo nel catalogo');
             
@@ -829,7 +887,6 @@
             XLSX.writeFile(wb, "Catalogo_Uzzo_Chef.xlsx");
         }
 
-        // IMPORTAZIONE TESTO
         function importItemsText() {
             const text = document.getElementById('import-text').value.trim();
             if(!text) return alert('Incolla del testo per importare');
@@ -846,6 +903,7 @@
             alert('Articoli importati nel carrello!');
             switchTab('tab-ordini');
             renderCart();
+            updateBadges();
         }
     </script>
 </body>
