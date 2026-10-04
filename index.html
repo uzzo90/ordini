@@ -1,6 +1,26 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+    <!-- Firebase SDK per Realtime Database -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+<script>
+  // Configurazione Firebase del tuo progetto
+  const firebaseConfig = {
+    apiKey: "AIzaSyBbBsK7E_UGvbMEUUYhKvFAm4ejkZCaVzo",
+    authDomain: "uzzo-ristorante.firebaseapp.com",
+    databaseURL: "https://uzzo-ristorante-default-rtdb.firebaseio.com",
+    projectId: "uzzo-ristorante",
+    storageBucket: "uzzo-ristorante.appspot.com",
+    messagingSenderId: "384476014616",
+    appId: "1:384476014616:web:e37e372e6fc2c84faffb6d"
+  };
+
+  // Inizializzazione di Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>UZZO CHEF ordini</title>
