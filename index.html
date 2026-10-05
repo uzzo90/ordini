@@ -360,7 +360,10 @@
         let prodotti = JSON.parse(localStorage.getItem('savino_prodotti')) || defaultProdotti;
         let carrello = JSON.parse(localStorage.getItem('savino_carrello')) || {};
         let currentCat = categorieObj[0]?.nome || 'Pesce';
-        // --- SINCRONIZZAZIONE IN TEMPO REALE CON FIREBASE ---
+// Variable di controllo per evitare che il carico iniziale sovrascriva Firebase
+let isFirebaseInitialized = false;
+
+// --- SINCRONIZZAZIONE IN TEMPO REALE CON FIREBASE ---
 db.ref('savino_data').on('value', (snapshot) => {
     const data = snapshot.val();
     if (data) {
@@ -368,11 +371,28 @@ db.ref('savino_data').on('value', (snapshot) => {
         if (data.fornitori) fornitori = data.fornitori;
         if (data.categorieObj) categorieObj = data.categorieObj;
         if (data.carrello) carrello = data.carrello;
+
+        // Mantieni anche il localStorage allineato al Cloud
+        localStorage.setItem('savino_prodotti', JSON.stringify(prodotti));
+        localStorage.setItem('savino_fornitori', JSON.stringify(fornitori));
+        localStorage.setItem('savino_categorie_obj', JSON.stringify(categorieObj));
+        localStorage.setItem('savino_carrello', JSON.stringify(carrello));
+
+        // Ridisegna tutte le sezioni per mostrare subito i nuovi prodotti e fornitori
         if (typeof renderOrdini === 'function') renderOrdini();
+        if (typeof renderGestione === 'function') renderGestione();
+        if (typeof renderInvio === 'function') renderInvio();
+        if (typeof renderIndice === 'function') renderIndice();
+        if (typeof updateHeaderTotal === 'function') updateHeaderTotal();
     }
+    // Da questo momento in poi il dispositivo è sincronizzato e può salvare
+    isFirebaseInitialized = true;
 });
 
 function salvaDatiFirebase() {
+    // Se l'app non ha ancora letto i dati da Firebase all'avvio, BLOCCA il salvataggio
+    if (!isFirebaseInitialized) return;
+
     localStorage.setItem('savino_prodotti', JSON.stringify(prodotti));
     localStorage.setItem('savino_fornitori', JSON.stringify(fornitori));
     localStorage.setItem('savino_categorie_obj', JSON.stringify(categorieObj));
