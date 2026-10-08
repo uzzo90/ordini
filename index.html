@@ -74,13 +74,13 @@
         }
         .nav-btn { 
             flex: 1; 
-            min-width: 70px; 
-            padding: 12px 6px; 
+            min-width: 65px; 
+            padding: 12px 4px; 
             text-align: center; 
             color: #9ca3af; 
             background: none; 
             border: none; 
-            font-size: 12px; 
+            font-size: 11px; 
             font-weight: 600; 
             cursor: pointer; 
             white-space: nowrap; 
@@ -213,6 +213,11 @@
         .supplier-info { font-size: 13px; }
         .supplier-info strong { display: block; color: #f3f4f6; }
         .supplier-info span { font-size: 11px; color: #9ca3af; }
+
+        /* STILI PER PLANNER & CHECKLIST */
+        .item-list { list-style: none; }
+        .item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #3a3b3c; }
+        .item-row.done { opacity: 0.5; text-decoration: line-through; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -230,6 +235,7 @@
         <button class="nav-btn active" onclick="switchTab('tab-ordini', event)">🛒 Ordina</button>
         <button class="nav-btn" onclick="switchTab('tab-fornitori', event)">📱 Invia</button>
         <button class="nav-btn" onclick="switchTab('tab-indice', event)">📋 Indice</button>
+        <button class="nav-btn" onclick="switchTab('tab-planner', event)">📝 Planner</button>
         <button class="nav-btn" onclick="switchTab('tab-gestione', event)">⚙️ Gestisci</button>
     </nav>
 
@@ -263,6 +269,41 @@
             <div id="indice-container"></div>
         </div>
 
+        <!-- TAB PLANNER (NOTE & CALENDARIO PREPARAZIONI) -->
+        <div id="tab-planner" class="tab-content">
+            <div class="card" style="border: 1px solid #656d4a;">
+                <div class="card-title" style="color: #a3b18a;">🔔 Notifiche Browser</div>
+                <p style="font-size: 11px; color: #9ca3af; margin-bottom: 8px;">Abilita gli avvisi per ricevere notifiche push all'ora stabilita per le tue preparazioni.</p>
+                <button class="btn btn-primary" style="width: 100%;" onclick="requestNotificationPermission()">🔔 Abilita Notifiche</button>
+            </div>
+
+            <!-- SEZIONE CALENDARIO -->
+            <div class="card">
+                <div class="card-title">📅 Pianifica Preparazione / Evento</div>
+                <input type="text" id="event-title" placeholder="Titolo (es. Impasti, Lavorazione Triglie)">
+                <input type="datetime-local" id="event-date">
+                <textarea id="event-desc" placeholder="Note operative o quantità (opzionale)..." style="min-height: 60px;"></textarea>
+                <button class="btn btn-primary" style="width: 100%;" onclick="addEvento()">+ Salva in Calendario</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📆 Prossime Preparazioni & Appuntamenti</div>
+                <ul id="event-list" class="item-list"></ul>
+            </div>
+
+            <!-- SEZIONE NOTE RAPIDE -->
+            <div class="card">
+                <div class="card-title">📝 Nuova Nota / Task Rapido</div>
+                <input type="text" id="note-input" placeholder="Es. Preparare fondo bruno, Pulire celle...">
+                <button class="btn btn-primary" style="width: 100%;" onclick="addNota()">+ Aggiungi Nota</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📋 Checklist Attività</div>
+                <ul id="note-list" class="item-list"></ul>
+            </div>
+        </div>
+
         <!-- TAB GESTIONE -->
         <div id="tab-gestione" class="tab-content">
             
@@ -284,7 +325,7 @@
                         <option value="🍺">🍺 Birra/Alcolici</option>
                         <option value="☕">☕ Caffe/Bar</option>
                         <option value="🏺">🏺 Olio/Condimenti</option>
-                        <option value="🌶️">🌶️️ Spezie/Aromi</option>
+                        <option value="🌶️">🌶 Spezie/Aromi</option>
                         <option value="🍰">🍰 Dolci/Pasticceria</option>
                         <option value="🧼">🧼 Pulizia/Igiene</option>
                         <option value="🛒">🛒 Altro</option>
@@ -359,52 +400,59 @@
         let fornitori = JSON.parse(localStorage.getItem('savino_fornitori')) || defaultFornitori;
         let prodotti = JSON.parse(localStorage.getItem('savino_prodotti')) || defaultProdotti;
         let carrello = JSON.parse(localStorage.getItem('savino_carrello')) || {};
+        let note = JSON.parse(localStorage.getItem('savino_note')) || [];
+        let eventi = JSON.parse(localStorage.getItem('savino_eventi')) || [];
         let currentCat = categorieObj[0]?.nome || 'Pesce';
-// Variable di controllo per evitare che il carico iniziale sovrascriva Firebase
-let isFirebaseInitialized = false;
 
-// --- SINCRONIZZAZIONE IN TEMPO REALE CON FIREBASE ---
-db.ref('savino_data').on('value', (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-        if (data.prodotti) prodotti = data.prodotti;
-        if (data.fornitori) fornitori = data.fornitori;
-        if (data.categorieObj) categorieObj = data.categorieObj;
-        if (data.carrello) carrello = data.carrello;
+        let isFirebaseInitialized = false;
 
-        // Mantieni anche il localStorage allineato al Cloud
-        localStorage.setItem('savino_prodotti', JSON.stringify(prodotti));
-        localStorage.setItem('savino_fornitori', JSON.stringify(fornitori));
-        localStorage.setItem('savino_categorie_obj', JSON.stringify(categorieObj));
-        localStorage.setItem('savino_carrello', JSON.stringify(carrello));
+        // --- SINCRONIZZAZIONE IN TEMPO REALE CON FIREBASE ---
+        db.ref('savino_data').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                if (data.prodotti) prodotti = data.prodotti;
+                if (data.fornitori) fornitori = data.fornitori;
+                if (data.categorieObj) categorieObj = data.categorieObj;
+                if (data.carrello) carrello = data.carrello;
+                if (data.note) note = data.note;
+                if (data.eventi) eventi = data.eventi;
 
-        // Ridisegna tutte le sezioni per mostrare subito i nuovi prodotti e fornitori
-        if (typeof renderOrdini === 'function') renderOrdini();
-        if (typeof renderGestione === 'function') renderGestione();
-        if (typeof renderInvio === 'function') renderInvio();
-        if (typeof renderIndice === 'function') renderIndice();
-        if (typeof updateHeaderTotal === 'function') updateHeaderTotal();
-    }
-    // Da questo momento in poi il dispositivo è sincronizzato e può salvare
-    isFirebaseInitialized = true;
-});
+                localStorage.setItem('savino_prodotti', JSON.stringify(prodotti));
+                localStorage.setItem('savino_fornitori', JSON.stringify(fornitori));
+                localStorage.setItem('savino_categorie_obj', JSON.stringify(categorieObj));
+                localStorage.setItem('savino_carrello', JSON.stringify(carrello));
+                localStorage.setItem('savino_note', JSON.stringify(note));
+                localStorage.setItem('savino_eventi', JSON.stringify(eventi));
 
-function salvaDatiFirebase() {
-    // Se l'app non ha ancora letto i dati da Firebase all'avvio, BLOCCA il salvataggio
-    if (!isFirebaseInitialized) return;
+                if (typeof renderOrdini === 'function') renderOrdini();
+                if (typeof renderGestione === 'function') renderGestione();
+                if (typeof renderInvio === 'function') renderInvio();
+                if (typeof renderIndice === 'function') renderIndice();
+                if (typeof renderPlanner === 'function') renderPlanner();
+                if (typeof updateHeaderTotal === 'function') updateHeaderTotal();
+            }
+            isFirebaseInitialized = true;
+        });
 
-    localStorage.setItem('savino_prodotti', JSON.stringify(prodotti));
-    localStorage.setItem('savino_fornitori', JSON.stringify(fornitori));
-    localStorage.setItem('savino_categorie_obj', JSON.stringify(categorieObj));
-    localStorage.setItem('savino_carrello', JSON.stringify(carrello));
+        function salvaDatiFirebase() {
+            if (!isFirebaseInitialized) return;
 
-    db.ref('savino_data').set({
-        prodotti: prodotti,
-        fornitori: fornitori,
-        categorieObj: categorieObj,
-        carrello: carrello
-    });
-}
+            localStorage.setItem('savino_prodotti', JSON.stringify(prodotti));
+            localStorage.setItem('savino_fornitori', JSON.stringify(fornitori));
+            localStorage.setItem('savino_categorie_obj', JSON.stringify(categorieObj));
+            localStorage.setItem('savino_carrello', JSON.stringify(carrello));
+            localStorage.setItem('savino_note', JSON.stringify(note));
+            localStorage.setItem('savino_eventi', JSON.stringify(eventi));
+
+            db.ref('savino_data').set({
+                prodotti: prodotti,
+                fornitori: fornitori,
+                categorieObj: categorieObj,
+                carrello: carrello,
+                note: note,
+                eventi: eventi
+            });
+        }
 
         /* MAPPA DI PAROLE CHIAVE PER SMISTAMENTO AUTOMATICO */
         const keywordsMap = {
@@ -453,9 +501,10 @@ function salvaDatiFirebase() {
         }
 
         function saveData() {
-    salvaDatiFirebase();
-    updateHeaderTotal();
-            }
+            salvaDatiFirebase();
+            updateHeaderTotal();
+        }
+
         function switchTab(tabId, ev) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -464,6 +513,7 @@ function salvaDatiFirebase() {
             if (tabId === 'tab-ordini') renderOrdini();
             if (tabId === 'tab-fornitori') renderInvio();
             if (tabId === 'tab-indice') renderIndice();
+            if (tabId === 'tab-planner') renderPlanner();
             if (tabId === 'tab-gestione') renderGestione();
         }
 
@@ -617,7 +667,7 @@ function salvaDatiFirebase() {
                                     <td style="text-align:right; font-weight:bold; color:#a3b18a;">€${p.prezzo.toFixed(2)}</td>
                                     <td class="actions-cell">
                                         <button class="btn btn-warning btn-sm" onclick="editProdotto('${p.id}')">✏️</button>
-                                        <button class="btn btn-danger btn-sm" onclick="deleteProdotto('${p.id}')">🗑️️</button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteProdotto('${p.id}')">🗑</button>
                                     </td>
                                  </tr>`;
                     });
@@ -642,45 +692,42 @@ function salvaDatiFirebase() {
             }
         }
 
-function editProdotto(prodId) {
-    let p = prodotti.find(x => x.id === prodId);
-    if (!p) return;
+        function editProdotto(prodId) {
+            let p = prodotti.find(x => x.id === prodId);
+            if (!p) return;
 
-    let nuovoNome = prompt("Nome del prodotto:", p.nome);
-    if (nuovoNome === null) return;
+            let nuovoNome = prompt("Nome del prodotto:", p.nome);
+            if (nuovoNome === null) return;
 
-    let nuovoPrezzo = prompt("Prezzo (€):", p.prezzo);
-    if (nuovoPrezzo === null) return;
+            let nuovoPrezzo = prompt("Prezzo (€):", p.prezzo);
+            if (nuovoPrezzo === null) return;
 
-    let nuovaUnita = prompt("Unità di misura (es. kg, pz, cassa):", p.unita);
-    if (nuovaUnita === null) return;
+            let nuovaUnita = prompt("Unità di misura (es. kg, pz, cassa):", p.unita);
+            if (nuovaUnita === null) return;
 
-    // SCELTA CATEGORIA
-    let catNomi = categorieObj.map(c => c.nome).join(", ");
-    let nuovaCat = prompt(`Categoria attuale: ${p.cat}\nCategorie disponibili:\n${catNomi}`, p.cat);
-    if (nuovaCat === null) return;
+            let catNomi = categorieObj.map(c => c.nome).join(", ");
+            let nuovaCat = prompt(`Categoria attuale: ${p.cat}\nCategorie disponibili:\n${catNomi}`, p.cat);
+            if (nuovaCat === null) return;
 
-    // SCELTA FORNITORE
-    let fornNomi = fornitori.map(f => `${f.nome} (scrivi: ${f.nome})`).join("\n");
-    let nuovoFornNome = prompt(`Fornitore attuale: ${(fornitori.find(f => f.id === p.fornitoreId) || {}).nome || 'Nessuno'}\nFornitori disponibili:\n${fornNomi}`, (fornitori.find(f => f.id === p.fornitoreId) || {}).nome || '');
-    if (nuovoFornNome === null) return;
+            let fornNomi = fornitori.map(f => `${f.nome} (scrivi: ${f.nome})`).join("\n");
+            let nuovoFornNome = prompt(`Fornitore attuale: ${(fornitori.find(f => f.id === p.fornitoreId) || {}).nome || 'Nessuno'}\nFornitori disponibili:\n${fornNomi}`, (fornitori.find(f => f.id === p.fornitoreId) || {}).nome || '');
+            if (nuovoFornNome === null) return;
 
-    // Salva le modifiche nei dati
-    p.nome = nuovoNome.trim() || p.nome;
-    p.prezzo = parsePrice(nuovoPrezzo);
-    p.unita = nuovaUnita.trim() || p.unita;
-    if (nuovaCat.trim()) p.cat = nuovaCat.trim();
+            p.nome = nuovoNome.trim() || p.nome;
+            p.prezzo = parsePrice(nuovoPrezzo);
+            p.unita = nuovaUnita.trim() || p.unita;
+            if (nuovaCat.trim()) p.cat = nuovaCat.trim();
 
-    let trovForn = fornitori.find(f => f.nome.toLowerCase() === nuovoFornNome.trim().toLowerCase());
-    if (trovForn) {
-        p.fornitoreId = trovForn.id;
-    }
+            let trovForn = fornitori.find(f => f.nome.toLowerCase() === nuovoFornNome.trim().toLowerCase());
+            if (trovForn) {
+                p.fornitoreId = trovForn.id;
+            }
 
-    saveData();
-    renderIndice();
-    renderOrdini();
-    if (typeof renderGestione === 'function') renderGestione();
-}
+            saveData();
+            renderIndice();
+            renderOrdini();
+            if (typeof renderGestione === 'function') renderGestione();
+        }
 
         function deleteProdotto(prodId) {
             let p = prodotti.find(x => x.id === prodId);
@@ -717,6 +764,136 @@ function editProdotto(prodId) {
             XLSX.utils.book_append_sheet(workbook, worksheet, "Catalogo Uzzo Chef");
             XLSX.writeFile(workbook, "Catalogo_Fornitori_UzzoChef.xlsx");
         }
+
+        /* --- FUNZIONI SCHEDA PLANNER (NOTE & CALENDARIO) --- */
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        alert('Notifiche attivate con successo!');
+                    } else {
+                        alert('Permesso notifiche non concesso.');
+                    }
+                });
+            } else {
+                alert('Il tuo browser non supporta le notifiche push.');
+            }
+        }
+
+        function addNota() {
+            let input = document.getElementById('note-input');
+            let txt = input.value.trim();
+            if (!txt) return;
+            note.push({ id: Date.now(), text: txt, done: false });
+            input.value = '';
+            saveData();
+            renderPlanner();
+        }
+
+        function toggleNota(id) {
+            let n = note.find(x => x.id === id);
+            if (n) {
+                n.done = !n.done;
+                saveData();
+                renderPlanner();
+            }
+        }
+
+        function deleteNota(id) {
+            note = note.filter(x => x.id !== id);
+            saveData();
+            renderPlanner();
+        }
+
+        function addEvento() {
+            let title = document.getElementById('event-title').value.trim();
+            let date = document.getElementById('event-date').value;
+            let desc = document.getElementById('event-desc').value.trim();
+
+            if (!title || !date) {
+                alert('Inserisci un titolo e una data/ora valida!');
+                return;
+            }
+
+            eventi.push({ id: Date.now(), title, date, desc, notified: false });
+            document.getElementById('event-title').value = '';
+            document.getElementById('event-date').value = '';
+            document.getElementById('event-desc').value = '';
+
+            saveData();
+            renderPlanner();
+        }
+
+        function deleteEvento(id) {
+            eventi = eventi.filter(x => x.id !== id);
+            saveData();
+            renderPlanner();
+        }
+
+        function renderPlanner() {
+            // Render Note
+            let ulNote = document.getElementById('note-list');
+            ulNote.innerHTML = '';
+            if (note.length === 0) {
+                ulNote.innerHTML = '<p style="font-size:12px; color:#9ca3af;">Nessuna nota o task presente.</p>';
+            } else {
+                note.forEach(n => {
+                    let li = document.createElement('li');
+                    li.className = `item-row ${n.done ? 'done' : ''}`;
+                    li.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="toggleNota(${n.id})">
+                            <input type="checkbox" ${n.done ? 'checked' : ''} style="width:auto; margin:0;">
+                            <span style="font-size:13px; color:#f3f4f6;">${n.text}</span>
+                        </div>
+                        <button class="btn btn-danger btn-sm" onclick="deleteNota(${n.id})">🗑</button>
+                    `;
+                    ulNote.appendChild(li);
+                });
+            }
+
+            // Render Eventi Calendario
+            let ulEventi = document.getElementById('event-list');
+            ulEventi.innerHTML = '';
+            if (eventi.length === 0) {
+                ulEventi.innerHTML = '<p style="font-size:12px; color:#9ca3af;">Nessuna preparazione in programma.</p>';
+            } else {
+                eventi.sort((a,b) => new Date(a.date) - new Date(b.date));
+                eventi.forEach(e => {
+                    let d = new Date(e.date);
+                    let dateStr = d.toLocaleDateString('it-IT') + ' ore ' + d.toLocaleTimeString('it-IT', {hour: '2-digit', minute:'2-digit'});
+                    
+                    let li = document.createElement('li');
+                    li.className = 'item-row';
+                    li.innerHTML = `
+                        <div>
+                            <strong style="color:#a3b18a; font-size:14px;">${e.title}</strong>
+                            <div style="font-size:11px; color:#9ca3af;">📅 ${dateStr}</div>
+                            ${e.desc ? `<div style="font-size:12px; color:#f3f4f6; margin-top:4px;">${e.desc}</div>` : ''}
+                        </div>
+                        <button class="btn btn-danger btn-sm" onclick="deleteEvento(${e.id})">🗑</button>
+                    `;
+                    ulEventi.appendChild(li);
+                });
+            }
+        }
+
+        // Controllo automatico notifiche push in background (ogni 30 sec)
+        setInterval(() => {
+            let now = new Date();
+            eventi.forEach(e => {
+                let eventTime = new Date(e.date);
+                if (!e.notified && eventTime <= now && (now - eventTime) < 300000) {
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        new Notification(`🍳 UZZO CHEF: ${e.title}`, {
+                            body: e.desc || 'È arrivato il momento programmato per la preparazione!',
+                            icon: 'https://cdn-icons-png.flaticon.com/512/3405/3405232.png'
+                        });
+                    }
+                    e.notified = true;
+                    saveData();
+                }
+            });
+        }, 30000);
 
         function renderGestione() {
             let fSelect1 = document.getElementById('new-prod-fornitore');
@@ -760,9 +937,9 @@ function editProdotto(prodId) {
                             <span>📞 ${f.tel || 'Nessun numero'}</span>
                         </div>
                         <div>
-    <button class="btn btn-warning btn-sm" style="margin-right:4px;" onclick="editFornitore('${f.id}')">✏️ Modifica</button>
-    <button class="btn btn-danger btn-sm" onclick="deleteFornitore('${f.id}')">🗑 Cancella</button>
-</div>
+                            <button class="btn btn-warning btn-sm" style="margin-right:4px;" onclick="editFornitore('${f.id}')">✏️ Modifica</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteFornitore('${f.id}')">🗑 Cancella</button>
+                        </div>
                     `;
                     fornitoriContainer.appendChild(item);
                 });
@@ -810,24 +987,26 @@ function editProdotto(prodId) {
             document.getElementById('new-fornitore-tel').value = '';
             renderGestione();
         }
-function editFornitore(fornitoreId) {
-    let f = fornitori.find(x => x.id === fornitoreId);
-    if (!f) return;
 
-    let nuovoNome = prompt("Nome Fornitore:", f.nome);
-    if (nuovoNome === null) return;
+        function editFornitore(fornitoreId) {
+            let f = fornitori.find(x => x.id === fornitoreId);
+            if (!f) return;
 
-    let nuovoTel = prompt("Numero WhatsApp (es. +393300000000):", f.tel || '');
-    if (nuovoTel === null) return;
+            let nuovoNome = prompt("Nome Fornitore:", f.nome);
+            if (nuovoNome === null) return;
 
-    f.nome = nuovoNome.trim() || f.nome;
-    f.tel = nuovoTel.trim();
+            let nuovoTel = prompt("Numero WhatsApp (es. +393300000000):", f.tel || '');
+            if (nuovoTel === null) return;
 
-    saveData();
-    if (typeof renderGestione === 'function') renderGestione();
-    renderOrdini();
-    renderIndice();
-}
+            f.nome = nuovoNome.trim() || f.nome;
+            f.tel = nuovoTel.trim();
+
+            saveData();
+            if (typeof renderGestione === 'function') renderGestione();
+            renderOrdini();
+            renderIndice();
+        }
+
         function deleteFornitore(fId) {
             let fObj = fornitori.find(f => f.id === fId);
             if (!fObj) return;
