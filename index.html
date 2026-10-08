@@ -760,8 +760,9 @@ function editProdotto(prodId) {
                             <span>📞 ${f.tel || 'Nessun numero'}</span>
                         </div>
                         <div>
-                            <button class="btn btn-danger btn-sm" onclick="deleteFornitore('${f.id}')">🗑️️ Cancella</button>
-                        </div>
+    <button class="btn btn-warning btn-sm" style="margin-right:4px;" onclick="editFornitore('${f.id}')">✏️ Modifica</button>
+    <button class="btn btn-danger btn-sm" onclick="deleteFornitore('${f.id}')">🗑 Cancella</button>
+</div>
                     `;
                     fornitoriContainer.appendChild(item);
                 });
@@ -809,7 +810,24 @@ function editProdotto(prodId) {
             document.getElementById('new-fornitore-tel').value = '';
             renderGestione();
         }
+function editFornitore(fornitoreId) {
+    let f = fornitori.find(x => x.id === fornitoreId);
+    if (!f) return;
 
+    let nuovoNome = prompt("Nome Fornitore:", f.nome);
+    if (nuovoNome === null) return;
+
+    let nuovoTel = prompt("Numero WhatsApp (es. +393300000000):", f.tel || '');
+    if (nuovoTel === null) return;
+
+    f.nome = nuovoNome.trim() || f.nome;
+    f.tel = nuovoTel.trim();
+
+    saveData();
+    if (typeof renderGestione === 'function') renderGestione();
+    renderOrdini();
+    renderIndice();
+}
         function deleteFornitore(fId) {
             let fObj = fornitori.find(f => f.id === fId);
             if (!fObj) return;
