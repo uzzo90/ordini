@@ -642,27 +642,45 @@ function salvaDatiFirebase() {
             }
         }
 
-        function editProdotto(prodId) {
-            let p = prodotti.find(x => x.id === prodId);
-            if (!p) return;
+function editProdotto(prodId) {
+    let p = prodotti.find(x => x.id === prodId);
+    if (!p) return;
 
-            let nuovoNome = prompt("Nome del prodotto:", p.nome);
-            if (nuovoNome === null) return;
+    let nuovoNome = prompt("Nome del prodotto:", p.nome);
+    if (nuovoNome === null) return;
 
-            let nuovoPrezzo = prompt("Prezzo (€):", p.prezzo);
-            if (nuovoPrezzo === null) return;
+    let nuovoPrezzo = prompt("Prezzo (€):", p.prezzo);
+    if (nuovoPrezzo === null) return;
 
-            let nuovaUnita = prompt("Unità di misura (es. kg, pz, cassa):", p.unita);
-            if (nuovaUnita === null) return;
+    let nuovaUnita = prompt("Unità di misura (es. kg, pz, cassa):", p.unita);
+    if (nuovaUnita === null) return;
 
-            p.nome = nuovoNome.trim() || p.nome;
-            p.prezzo = parsePrice(nuovoPrezzo);
-            p.unita = nuovaUnita.trim() || p.unita;
+    // SCELTA CATEGORIA
+    let catNomi = categorieObj.map(c => c.nome).join(", ");
+    let nuovaCat = prompt(`Categoria attuale: ${p.cat}\nCategorie disponibili:\n${catNomi}`, p.cat);
+    if (nuovaCat === null) return;
 
-            saveData();
-            renderIndice();
-            renderOrdini();
-        }
+    // SCELTA FORNITORE
+    let fornNomi = fornitori.map(f => `${f.nome} (scrivi: ${f.nome})`).join("\n");
+    let nuovoFornNome = prompt(`Fornitore attuale: ${(fornitori.find(f => f.id === p.fornitoreId) || {}).nome || 'Nessuno'}\nFornitori disponibili:\n${fornNomi}`, (fornitori.find(f => f.id === p.fornitoreId) || {}).nome || '');
+    if (nuovoFornNome === null) return;
+
+    // Salva le modifiche nei dati
+    p.nome = nuovoNome.trim() || p.nome;
+    p.prezzo = parsePrice(nuovoPrezzo);
+    p.unita = nuovaUnita.trim() || p.unita;
+    if (nuovaCat.trim()) p.cat = nuovaCat.trim();
+
+    let trovForn = fornitori.find(f => f.nome.toLowerCase() === nuovoFornNome.trim().toLowerCase());
+    if (trovForn) {
+        p.fornitoreId = trovForn.id;
+    }
+
+    saveData();
+    renderIndice();
+    renderOrdini();
+    if (typeof renderGestione === 'function') renderGestione();
+}
 
         function deleteProdotto(prodId) {
             let p = prodotti.find(x => x.id === prodId);
