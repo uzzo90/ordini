@@ -33,7 +33,6 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* SFONDO SCURO CON PATTERN STILIZZATO DI CIBO (SVG VECTOR) */
         body { 
             background-color: #18191a; 
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' opacity='0.06'%3E%3Cpath fill='%2523ffffff' d='M20 15a3 3 0 0 0-3 3v12a3 3 0 0 0 6 0V18a3 3 0 0 0-3-3zm10 0a3 3 0 0 0-3 3v12a3 3 0 0 0 6 0V18a3 3 0 0 0-3-3zm10 0a3 3 0 0 0-3 3v12a3 3 0 0 0 6 0V18a3 3 0 0 0-3-3zm-15 18a3 3 0 0 0-3 3v15a3 3 0 0 0 6 0V36a3 3 0 0 0-3-3zm70-18c-5 0-9 4-9 9v15h3v21a3 3 0 0 0 6 0V15zm-30 45c-8 0-15 5-15 12s7 12 15 12 15-5 15-12-7-12-15-12zm-3 8a3 3 0 1 1 6 0 3 3 0 0 1-6 0zm45-8c-6 0-10 4-10 10 0 8 10 18 10 18s10-10 10-18c0-6-4-10-10-10zm0 7a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm-60 25l-12 20h24l-12-20zm-40 0c-4 0-8 3-8 8s4 8 8 8h12v-16H20z'/%3E%3C/svg%3E");
@@ -44,7 +43,6 @@
             overflow: hidden; 
         }
         
-        /* HEADER & NAV IN VERDE OLIVA CON EFFETTO VETRO SCURO */
         header { 
             background: rgba(24, 25, 26, 0.85); 
             backdrop-filter: blur(12px); 
@@ -74,7 +72,7 @@
         }
         .nav-btn { 
             flex: 1; 
-            min-width: 65px; 
+            min-width: 60px; 
             padding: 12px 4px; 
             text-align: center; 
             color: #9ca3af; 
@@ -93,7 +91,6 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* CARDS SCURE CON BORDI VERDE OLIVA SFUMATI */
         .card { 
             background: #242526; 
             border-radius: 12px; 
@@ -109,7 +106,6 @@
         .arrow-icon { font-size: 11px; color: #a3b18a; transition: transform 0.25s ease; display: inline-block; }
         .arrow-icon.rotated { transform: rotate(180deg); }
 
-        /* PULSANTI VERDE OLIVA E ACCENTI */
         .btn { 
             padding: 9px 14px; 
             border-radius: 8px; 
@@ -131,7 +127,6 @@
         .btn-warning { background-color: #d97706; color: white; }
         .btn-sm { padding: 4px 8px; font-size: 11px; border-radius: 6px; }
 
-        /* PULSANTE WHATSAPP */
         .btn-whatsapp {
             background-color: #25D366;
             color: white;
@@ -142,7 +137,6 @@
         }
         .btn-whatsapp:active { transform: scale(0.95); }
 
-        /* GRIGLIA CATEGORIE SCURA */
         .grid-select { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; margin-bottom: 12px; }
         .grid-btn { 
             padding: 10px 6px; 
@@ -159,7 +153,6 @@
         .grid-btn:active { transform: scale(0.95); }
         .grid-btn.selected { background: #656d4a; color: white; border-color: #a3b18a; box-shadow: 0 3px 8px rgba(101, 109, 74, 0.4); }
 
-        /* PRODOTTI LISTA CON CONTROLLI + / - SCURI */
         .product-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #3a3b3c; }
         .qty-controls { display: flex; align-items: center; gap: 8px; }
         .qty-btn { 
@@ -184,7 +177,6 @@
         
         .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: rgba(163, 177, 138, 0.15); color: #a3b18a; font-weight: 700; border: 1px solid rgba(163, 177, 138, 0.3); }
         
-        /* TOTALE HEADER VERDE OLIVA */
         #header-tot { 
             font-size: 13px; 
             font-weight: 700;
@@ -197,7 +189,6 @@
         }
         #header-tot.bounce { transform: scale(1.12); }
 
-        /* TABELLA CATALOGO SCURA */
         .catalog-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
         .catalog-table th { background: #18191a; text-align: left; padding: 8px; color: #9ca3af; font-weight: 600; border-bottom: 1px solid #3a3b3c; }
         .catalog-table td { padding: 8px; border-bottom: 1px solid #2a2b2c; vertical-align: middle; }
@@ -208,13 +199,11 @@
 
         .cat-tag { display: inline-flex; align-items: center; justify-content: space-between; background: #18191a; border: 1px solid #3a3b3c; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin: 3px; font-weight: 500; color: #e4e6eb; }
 
-        /* LISTA FORNITORI IN GESTIONE SCURA */
         .supplier-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: #18191a; border: 1px solid #3a3b3c; border-radius: 8px; margin-bottom: 6px; }
         .supplier-info { font-size: 13px; }
         .supplier-info strong { display: block; color: #f3f4f6; }
         .supplier-info span { font-size: 11px; color: #9ca3af; }
 
-        /* STILI PER PLANNER & CHECKLIST */
         .item-list { list-style: none; }
         .item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #3a3b3c; }
         .item-row.done { opacity: 0.5; text-decoration: line-through; }
@@ -234,6 +223,7 @@
     <nav>
         <button class="nav-btn active" onclick="switchTab('tab-ordini', event)">🛒 Ordina</button>
         <button class="nav-btn" onclick="switchTab('tab-fornitori', event)">📱 Invia</button>
+        <button class="nav-btn" onclick="switchTab('tab-storico', event)">📜 Storico</button>
         <button class="nav-btn" onclick="switchTab('tab-indice', event)">📋 Indice</button>
         <button class="nav-btn" onclick="switchTab('tab-planner', event)">📝 Planner</button>
         <button class="nav-btn" onclick="switchTab('tab-gestione', event)">⚙️ Gestisci</button>
@@ -254,7 +244,23 @@
 
         <!-- TAB INVIA -->
         <div id="tab-fornitori" class="tab-content">
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 13px; font-weight: 700; color: #e4e6eb;">Riepilogo Ordine del Giorno</span>
+                <button class="btn btn-danger btn-sm" onclick="svuotaCarrello()">🧹 Azzera Carrello</button>
+            </div>
             <div id="summary-fornitori">Nessun prodotto selezionato.</div>
+        </div>
+
+        <!-- TAB STORICO -->
+        <div id="tab-storico" class="tab-content">
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="font-size: 15px; font-weight: 700;">Storico Ordini Inviati</h3>
+                    <span style="font-size: 11px; color: #9ca3af;">Registro acquisti nel tempo</span>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="svuotaStorico()">🗑 Elimina Tutti</button>
+            </div>
+            <div id="storico-container"></div>
         </div>
 
         <!-- TAB INDICE CATALOGO -->
@@ -269,7 +275,7 @@
             <div id="indice-container"></div>
         </div>
 
-        <!-- TAB PLANNER (NOTE & CALENDARIO PREPARAZIONI) -->
+        <!-- TAB PLANNER (NOTE & CALENDARIO) -->
         <div id="tab-planner" class="tab-content">
             <div class="card" style="border: 1px solid #656d4a;">
                 <div class="card-title" style="color: #a3b18a;">🔔 Notifiche Browser</div>
@@ -277,7 +283,6 @@
                 <button class="btn btn-primary" style="width: 100%;" onclick="requestNotificationPermission()">🔔 Abilita Notifiche</button>
             </div>
 
-            <!-- SEZIONE CALENDARIO -->
             <div class="card">
                 <div class="card-title">📅 Pianifica Preparazione / Evento</div>
                 <input type="text" id="event-title" placeholder="Titolo (es. Impasti, Lavorazione Triglie)">
@@ -291,7 +296,6 @@
                 <ul id="event-list" class="item-list"></ul>
             </div>
 
-            <!-- SEZIONE NOTE RAPIDE -->
             <div class="card">
                 <div class="card-title">📝 Nuova Nota / Task Rapido</div>
                 <input type="text" id="note-input" placeholder="Es. Preparare fondo bruno, Pulire celle...">
@@ -306,8 +310,6 @@
 
         <!-- TAB GESTIONE -->
         <div id="tab-gestione" class="tab-content">
-            
-            <!-- GESTIONE CATEGORIE CON SCELTA ICONA -->
             <div class="card">
                 <div class="card-title">🏷️ Gestisci Categorie & Icone</div>
                 <div style="display: flex; gap: 6px; margin-bottom: 8px;">
@@ -336,7 +338,6 @@
                 <div id="categories-list-container" style="margin-top: 8px;"></div>
             </div>
 
-            <!-- INCOLLA MULTI-RIGA / BLOCCO INTELLIGENTE -->
             <div class="card" style="border: 1px solid #656d4a;">
                 <div class="card-title" style="color: #a3b18a;">⚡ Importazione Intelligente da Testo / Gemini</div>
                 <label style="font-size: 11px; color: #9ca3af;">Fornitore di Destinazione:</label>
@@ -350,7 +351,6 @@
                 <button class="btn btn-primary" style="width: 100%;" onclick="addBulkProducts()">🧠 Smista e Aggiungi in Blocco</button>
             </div>
 
-            <!-- AGGIUNTA MANUALE SINGOLA -->
             <div class="card">
                 <div class="card-title">+ Aggiungi Prodotto Singolo</div>
                 <input type="text" id="new-prod-nome" placeholder="Nome Prodotto">
@@ -361,7 +361,6 @@
                 <button class="btn btn-primary" onclick="addProdotto()">+ Aggiungi Prodotto</button>
             </div>
 
-            <!-- FORNITORI -->
             <div class="card">
                 <div class="card-title">🚚 Gestisci Fornitori</div>
                 <input type="text" id="new-fornitore-nome" placeholder="Nome Fornitore">
@@ -402,6 +401,7 @@
         let carrello = JSON.parse(localStorage.getItem('savino_carrello')) || {};
         let note = JSON.parse(localStorage.getItem('savino_note')) || [];
         let eventi = JSON.parse(localStorage.getItem('savino_eventi')) || [];
+        let storico = JSON.parse(localStorage.getItem('savino_storico')) || [];
         let currentCat = categorieObj[0]?.nome || 'Pesce';
 
         let isFirebaseInitialized = false;
@@ -416,6 +416,7 @@
                 if (data.carrello) carrello = data.carrello;
                 if (data.note) note = data.note;
                 if (data.eventi) eventi = data.eventi;
+                if (data.storico) storico = data.storico;
 
                 localStorage.setItem('savino_prodotti', JSON.stringify(prodotti));
                 localStorage.setItem('savino_fornitori', JSON.stringify(fornitori));
@@ -423,12 +424,14 @@
                 localStorage.setItem('savino_carrello', JSON.stringify(carrello));
                 localStorage.setItem('savino_note', JSON.stringify(note));
                 localStorage.setItem('savino_eventi', JSON.stringify(eventi));
+                localStorage.setItem('savino_storico', JSON.stringify(storico));
 
                 if (typeof renderOrdini === 'function') renderOrdini();
                 if (typeof renderGestione === 'function') renderGestione();
                 if (typeof renderInvio === 'function') renderInvio();
                 if (typeof renderIndice === 'function') renderIndice();
                 if (typeof renderPlanner === 'function') renderPlanner();
+                if (typeof renderStorico === 'function') renderStorico();
                 if (typeof updateHeaderTotal === 'function') updateHeaderTotal();
             }
             isFirebaseInitialized = true;
@@ -443,6 +446,7 @@
             localStorage.setItem('savino_carrello', JSON.stringify(carrello));
             localStorage.setItem('savino_note', JSON.stringify(note));
             localStorage.setItem('savino_eventi', JSON.stringify(eventi));
+            localStorage.setItem('savino_storico', JSON.stringify(storico));
 
             db.ref('savino_data').set({
                 prodotti: prodotti,
@@ -450,11 +454,11 @@
                 categorieObj: categorieObj,
                 carrello: carrello,
                 note: note,
-                eventi: eventi
+                eventi: eventi,
+                storico: storico
             });
         }
 
-        /* MAPPA DI PAROLE CHIAVE PER SMISTAMENTO AUTOMATICO */
         const keywordsMap = {
             'Pesce': ['sarda', 'sarde', 'gambero', 'orata', 'spigola', 'calamaro', 'polpo', 'pesce', 'tonno', 'cozze', 'vongole', 'baccalà', 'merluzzo', 'triglia', 'ricciola', 'trancio'],
             'Carne': ['manzo', 'vitello', 'maiale', 'pollo', 'salsiccia', 'hamburger', 'filetto', 'carne', 'macinato', 'costina', 'agnello', 'tacchino', 'pancetta'],
@@ -469,7 +473,6 @@
 
         function detectCategory(text, fallbackCat) {
             let lowerText = text.toLowerCase();
-
             for (let c of categorieObj) {
                 if (lowerText.startsWith(c.nome.toLowerCase() + '-') || 
                     lowerText.startsWith(c.nome.toLowerCase() + ':') ||
@@ -477,7 +480,6 @@
                     return c.nome;
                 }
             }
-
             for (let catName in keywordsMap) {
                 let match = keywordsMap[catName].some(kw => lowerText.includes(kw));
                 if (match) {
@@ -485,7 +487,6 @@
                     if (existingCat) return existingCat.nome;
                 }
             }
-
             return fallbackCat;
         }
 
@@ -512,6 +513,7 @@
             if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
             if (tabId === 'tab-ordini') renderOrdini();
             if (tabId === 'tab-fornitori') renderInvio();
+            if (tabId === 'tab-storico') renderStorico();
             if (tabId === 'tab-indice') renderIndice();
             if (tabId === 'tab-planner') renderPlanner();
             if (tabId === 'tab-gestione') renderGestione();
@@ -527,6 +529,16 @@
             el.innerText = `Tot: €${tot.toFixed(2)}`;
             el.classList.add('bounce');
             setTimeout(() => el.classList.remove('bounce'), 200);
+        }
+
+        function svuotaCarrello() {
+            if (Object.keys(carrello).length === 0) return alert("Il carrello è già vuoto.");
+            if (confirm("Vuoi azzerare il carrello per preparare il nuovo ordine di domani?")) {
+                carrello = {};
+                saveData();
+                renderOrdini();
+                renderInvio();
+            }
         }
 
         function renderOrdini() {
@@ -581,6 +593,23 @@
             renderOrdini();
         }
 
+        function registraInStorico(fornitoreNome, items, subtot) {
+            let now = new Date();
+            let dateStr = now.toLocaleDateString('it-IT') + ' ' + now.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+            
+            let dettaglio = items.map(i => `${i.prod.nome}: ${i.qty} ${i.prod.unita}`).join(', ');
+
+            storico.unshift({
+                id: 'st_' + Date.now(),
+                data: dateStr,
+                fornitore: fornitoreNome,
+                dettaglio: dettaglio,
+                totale: subtot
+            });
+
+            saveData();
+        }
+
         function renderInvio() {
             let container = document.getElementById('summary-fornitori');
             container.innerHTML = '';
@@ -616,12 +645,63 @@
                 });
 
                 textMsg += `\n*Totale: €${subtot.toFixed(2)}*`;
+                
+                let jsonItems = JSON.stringify(items).replace(/"/g, '&quot;');
                 html += `</ul><div style="display:flex; justify-content:space-between; align-items:center;">
                             <strong style="color:#a3b18a;">Totale: €${subtot.toFixed(2)}</strong>
-                            <button class="btn btn-whatsapp" onclick="window.open('https://wa.me/${fObj.tel}?text=${encodeURIComponent(textMsg)}', '_blank')">💬 WhatsApp</button>
+                            <button class="btn btn-whatsapp" onclick="invioEParteStorico('${fObj.tel}', '${encodeURIComponent(textMsg)}', '${fObj.nome}', ${jsonItems}, ${subtot})">💬 WhatsApp</button>
                          </div>`;
                 card.innerHTML = html;
                 container.appendChild(card);
+            }
+        }
+
+        function invioEParteStorico(tel, msgEncoded, fornNome, items, subtot) {
+            registraInStorico(fornNome, items, subtot);
+            window.open(`https://wa.me/${tel}?text=${msgEncoded}`, '_blank');
+        }
+
+        function renderStorico() {
+            let container = document.getElementById('storico-container');
+            container.innerHTML = '';
+
+            if (storico.length === 0) {
+                container.innerHTML = '<p style="font-size:13px; color:#9ca3af;">Nessun ordine presente nello storico.</p>';
+                return;
+            }
+
+            storico.forEach(s => {
+                let card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-title">
+                        <span>🚚 ${s.fornitore}</span>
+                        <span style="font-size:11px; color:#9ca3af; font-weight:normal;">📅 ${s.data}</span>
+                    </div>
+                    <div style="font-size:13px; color:#f3f4f6; margin-bottom:8px;">${s.dettaglio}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #3a3b3c; padding-top:8px;">
+                        <strong style="color:#a3b18a; font-size:13px;">Totale: €${s.totale.toFixed(2)}</strong>
+                        <button class="btn btn-danger btn-sm" onclick="eliminaDastorico('${s.id}')">🗑 Elimina</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function eliminaDastorico(id) {
+            if (confirm("Vuoi rimuovere questo ordine dallo storico?")) {
+                storico = storico.filter(x => x.id !== id);
+                saveData();
+                renderStorico();
+            }
+        }
+
+        function svuotaStorico() {
+            if (storico.length === 0) return alert("Lo storico è già vuoto.");
+            if (confirm("Sei sicuro di voler cancellare TUTTI gli ordini registrati nello storico?")) {
+                storico = [];
+                saveData();
+                renderStorico();
             }
         }
 
@@ -765,7 +845,6 @@
             XLSX.writeFile(workbook, "Catalogo_Fornitori_UzzoChef.xlsx");
         }
 
-        /* --- FUNZIONI SCHEDA PLANNER (NOTE & CALENDARIO) --- */
         function requestNotificationPermission() {
             if ('Notification' in window) {
                 Notification.requestPermission().then(permission => {
@@ -831,7 +910,6 @@
         }
 
         function renderPlanner() {
-            // Render Note
             let ulNote = document.getElementById('note-list');
             ulNote.innerHTML = '';
             if (note.length === 0) {
@@ -851,7 +929,6 @@
                 });
             }
 
-            // Render Eventi Calendario
             let ulEventi = document.getElementById('event-list');
             ulEventi.innerHTML = '';
             if (eventi.length === 0) {
@@ -877,7 +954,6 @@
             }
         }
 
-        // Controllo automatico notifiche push in background (ogni 30 sec)
         setInterval(() => {
             let now = new Date();
             eventi.forEach(e => {
